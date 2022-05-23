@@ -13,9 +13,6 @@
                     Copyright &copy; 2021 ExptionKMITL
                 </div>
             </div>
-            <div class="col-md-2" id="help">
-                <a href="/">HELP</a>
-            </div>
         </div>
     </footer>
 </template>

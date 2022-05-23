@@ -73,7 +73,7 @@ router.post("/register/submit", async function (req, res, next){
             console.log('Error', 'StudentID ซ้ำ')
         }
         else{
-            await conn.query(
+            const [rows, fields] = await conn.query(
                 "INSERT INTO account(acc_fname, acc_lname, acc_password, acc_email, create_date) VALUES(?, ?, ?, ?, CURRENT_TIMESTAMP);",
                 [Firstname, Lastname, hashedPassword, Email]
             ) // insert data in table_account
@@ -86,7 +86,7 @@ router.post("/register/submit", async function (req, res, next){
             ) //  insert data in table_admin
             let token = generateToken() // create token
             await conn.query(
-                "INSERT INTO tokens(token) VALUES(?);", [token]
+                "INSERT INTO tokens(token, acc_id) VALUES(?, ?);", [token, rows.insertId]
             ) //  insert data in tokens
             await conn.commit()
             var d = new Date();
