@@ -1,5 +1,4 @@
-import { resolveMaybeThunk, schemaComposer } from "graphql-compose";
-import { Schema } from "mongoose";
+import { schemaComposer } from "graphql-compose";
 import { generateToken } from "../../lib/generateToken";
 import { AdminModel } from "../../models/admin";
 import { UserModel, UserTC } from "../../models/user";
@@ -29,28 +28,33 @@ export const login = schemaComposer.createResolver({
         const { email, password } = args
         const user = await UserModel.findOne({ email: email.toLowerCase() })
         const admin = await AdminModel.findOne({ email: email.toLowerCase() })
-        let role = null
-        let validPassword = null
         if (!user && !admin) {
-            return { status: 'failed', message: 'email not found', token: null}
+            return { status: 'failed', message: 'email not found', token: null }
         }
 
         if (user) {
-            validPassword = await user.verifyPassword(password)
-            role = "user"
+            const validPassword = await user.verifyPassword(password)
+            if (!validPassword) {
+                return {
+                    status: 'failed', message: 'Password incorrect', token: null
+                }
+            }
+            const token = generateToken(user)
+            return { status: 'success', message: 'Login success', token, role: "user" }
         }
         else if (admin) {
-            validPassword = await admin.verifyPassword(password)
-            role = "admin"
+            const validPassword = await admin.verifyPassword(password)
+            if (!validPassword) {
+                return {
+                    status: 'failed', message: 'Password incorrect', token: null
+                }
+            }
+            const token = generateToken(admin)
+            return { status: 'success', message: 'Login success', token, role: "admin" }
         }
 
-        if (!validPassword) {
-            return {
-                status: 'failed', message: 'Password incorrect', token: null
-            }
-        }
-        const token = generateToken(user)
-        return { status: 'success', message: 'Login success', token, role }
+
+
     },
 })
 
@@ -67,19 +71,19 @@ export const changePassword = schemaComposer.createResolver({
     kind: 'mutation',
     type: ChangePasswordPayloadOTC,
     args: {
-        _id : 'MongoID!',
+        _id: 'MongoID!',
         old_password: 'String!',
         new_password: 'String!'
     },
     resolve: async ({ args }) => {
-        const {_id, old_password, new_password} = args
+        const { _id, old_password, new_password } = args
         const user = await UserModel.findById(_id)
         const validPassword = await user.verifyPassword(old_password)
         if (validPassword) {
-            await UserModel.updateOne({_id: _id}, {password: new_password})
-            return {status: "Success", "message": "Password Updated!"}
+            await UserModel.updateOne({ _id: _id }, { password: new_password })
+            return { status: "Success", "message": "Password Updated!" }
         } else {
-            return {status: "Failed", "message": "Old Password Incorrect."}
+            return { status: "Failed", "message": "Old Password Incorrect." }
         }
     }
 })

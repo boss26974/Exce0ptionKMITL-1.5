@@ -3,11 +3,7 @@ import { model, Schema } from 'mongoose'
 import mongooseBcrypt from 'mongoose-bcrypt'
 
 const AdminSchema = new Schema({
-  fname: {
-    type: String,
-    required: true,
-  },
-  lname: {
+  name: {
     type: String,
     required: true
   },
