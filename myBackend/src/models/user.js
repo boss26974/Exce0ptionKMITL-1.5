@@ -32,6 +32,8 @@ const UserSchema = new Schema({
         type: String,
         enum: ['studying', 'graduated'] // ['กำลังศึกษาอยู่', 'จบการศึกษาแล้ว']ใช้ภาษาไทยแล้ว Error
     },
+}, {
+    timestamps: true
 })
 
 UserSchema.plugin(mongooseBcrypt)
