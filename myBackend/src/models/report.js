@@ -27,9 +27,9 @@ const ReportSchema = new Schema({
     submission_status: {
         type: String,
         enum: ['Received', 'In-Progress', 'Declined', 'Accepted', 'Completed'], //ได้รับคำร้อง กำลังตรวจสอบ ปฏิเสธ รับไปแก้ไข สำเร็จ
-        required: true
+        default: "Received",
     },
-    acc_id: {
+    complainer_id: { //id ของผู้ร้องเรียน (User)
         type: Schema.Types.ObjectId,
         ref: 'User',
         required: true
