@@ -8,15 +8,15 @@
                     <li id="comp1" v-if="manage_acc == 1"><a href="/manageUser">Manage User</a></li>
                     <li id="comp1" v-if="manage_standand == 1"><a href="/manageforum">Manage Forum</a></li>
                     <li id="comp1" v-if="manage_standand == 1"><a href="/manageReport">Manage Report</a></li>
-                    <template v-if="id ==''">
+                    <template v-if="!currentUser">
                         <li id="comp2"><a href="/login">Log In</a></li>
                         <div class="line"></div>
                         <li id="comp2"><a href="/register">Register</a></li>
                     </template>
-                    <div class="dropdown" v-if="id !=''">
+                    <div class="dropdown" v-if="currentUser">
                         <a :href="`${permissionPath}`" style="text-decoration: none;" v-show="role == 'User'"><button type="button" class="home btn btn-outline-light">Home</button></a>
                         <button class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i :class="{'fa fa-user-plus': role == 'Admin', 'fa fa-user': role == 'User'}"></i> {{id}}
+                            <i :class="{'fa fa-user-plus': role == 'Admin', 'fa fa-user': role == 'User'}"></i> {{currentUser.studentid}}
                         </button>
                         <p class="dropdown-menu" >
                             <button class="dropdown-item text-danger" type="button" @click="logout()">ออกจากระบบ</button>
@@ -52,57 +52,57 @@
         </div>
         <center><p id="tracking_big_title" style="font-size: 24px;" v-show="typescreen || id_screen">{{title}}</p></center>
         <div id="all_select_tab" class="container-fluid">
-            <section  v-show="typescreen"><div class="row" v-for="reportform in reportforms" :key="reportform.report_form_id" style="margin-bottom: 7%;">
+            <section  v-show="typescreen"><div class="row" v-for="reportform in Reports" :key="reportform._id" style="margin-bottom: 7%;">
                 <div class="col-5" id="reportform_description">
-                    <p>หัวข้อเรื่องร้องเรียน : {{reportform.report_form_topic}}</p>
-                    <p>เนื้อหาเรื่องร้องเรียน : {{reportform.problem_description}}</p>
-                    <p>สถานะ : {{reportform.status}}</p>
+                    <p>หัวข้อเรื่องร้องเรียน : {{reportform.topic}}</p>
+                    <p>เนื้อหาเรื่องร้องเรียน : {{reportform.description}}</p>
+                    <p>สถานะ : {{reportform.submission_status}}</p>
                     <p>ประเภทเรื่องร้องเรียน : {{reportform.type}}</p>
                 </div>
                 <div class="col-7" id="reportform_bar">
                     <div class="row">
                         <div class="col-12" style="margin-bottom : 3%;">
                             <div class="progress">
-                                <div class="progress-bar" role="progressbar" :style="tubestatus(reportform.status)" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                                <div class="progress-bar" role="progressbar" :style="tubestatus(reportform.submission_status)" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
                         </div>
                         <div class="col-3" style="text-align: center">
-                            <i :style="{'font-weight': statusfont(reportform.status, 0).weight}">ระบบได้รับเรื่องแล้ว</i>
+                            <i :style="{'font-weight': statusfont(reportform.submission_status, 'Received').weight}">ระบบได้รับเรื่องแล้ว</i>
                         </div>
                         <div class="col-3" style="text-align: center">
-                            <i :style="{'font-weight': statusfont(reportform.status, 1).weight}">ระบบกำลังตรวจสอบ</i>
+                            <i :style="{'font-weight': statusfont(reportform.submission_status, 'In_Progress').weight}">ระบบกำลังตรวจสอบ</i>
                         </div>
                         <div class="col-3" style="text-align: center">
-                            <i :style="{'font-weight': statusfont(reportform.status, 2).weight}">{{extrafontstatus(reportform.status)}}</i>
+                            <i :style="{'font-weight': statusfont(reportform.submission_status, 'Accepted').weight}">{{extrafontstatus(reportform.submission_status)}}</i>
                         </div>
                         <div class="col-3" style="text-align: center">
-                            <i :style="{'font-weight': statusfont(reportform.status, 3).weight}">ระบบดำเนินการสำเร็จ</i>
+                            <i :style="{'font-weight': statusfont(reportform.submission_status, 'Completed').weight}">ระบบดำเนินการสำเร็จ</i>
                         </div>
                     </div>
                 </div>
             </div></section>
-            <section  v-show="id_screen"><div class="row" v-for="reportform in reportforms" :key="reportform.report_form_id" style="margin-bottom: 7%;">
+            <section  v-show="id_screen"><div class="row" v-for="reportform in Reports" :key="reportform._id" style="margin-bottom: 7%;">
                 <div class="col-12">
-                    {{reportform.report_form_topic}}
+                    {{reportform.topic}}
                 </div>
                 <div class="col-12">
                     <div class="row" style="color: #ffffff">
                         <div class="col-12" style="margin-bottom : 3%;">
                             <div class="progress">
-                                <div class="progress-bar" role="progressbar" :style="tubestatus(reportform.status)" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
+                                <div class="progress-bar" role="progressbar" :style="tubestatus(reportform.submission_status)" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
                             </div>
                         </div>
                         <div class="col-3" style="text-align: center">
-                            <i :style="{'opacity': statusfont(reportform.status, 0).opa}">ระบบได้รับเรื่องแล้ว</i>
+                            <i :style="{'opacity': statusfont(reportform.submission_status, 'Received').opa}">ระบบได้รับเรื่องแล้ว</i>
                         </div>
                         <div class="col-3" style="text-align: center">
-                            <i :style="{'opacity': statusfont(reportform.status, 1).opa}">ระบบกำลังตรวจสอบ</i>
+                            <i :style="{'opacity': statusfont(reportform.submission_status, 'In_Progress').opa}">ระบบกำลังตรวจสอบ</i>
                         </div>
                         <div class="col-3" style="text-align: center">
-                            <i :style="{'opacity': statusfont(reportform.status, 2).opa}">{{extrafontstatus(reportform.status)}}</i>
+                            <i :style="{'opacity': statusfont(reportform.submission_status, 'Accepted').opa}">{{extrafontstatus(reportform.status)}}</i>
                         </div>
                         <div class="col-3" style="text-align: center">
-                            <i :style="{'opacity': statusfont(reportform.status, 3).opa}">ระบบดำเนินการสำเร็จ</i>
+                            <i :style="{'opacity': statusfont(reportform.submission_status, 'Completed').opa}">ระบบดำเนินการสำเร็จ</i>
                         </div>
                     </div>
                     <div class="row">
@@ -129,77 +129,71 @@
 
 <script>
 import axios from "axios";
+import { CURRENT_USER_QUERY, REPORTS_FROM_TYPE_QUERY } from "../graphql"
+import Cookies from "js-cookie"
 export default {
         data() {
             return{
                 tokenUser: null,
                 tokenAdmin: null,
                 role: null,
-                id: '',
                 manage_acc: null,
                 manage_standand: null,
                 permissionPath: null,
+                currentUser: null,
                 // trackingstatus
-                reportforms: [],
+                Reports: [],
                 type_select: null,
                 id_select: "",
-                typescreen: false,
+                typescreen: true,
                 id_screen: false,
                 title: "",
                 errortype: "",
                 errorid: ""
             }
         },
+        apollo: {
+        currentUser: {
+            query: CURRENT_USER_QUERY
+        },
+        Reports: {
+            query: REPORTS_FROM_TYPE_QUERY,
+        }
+    },
         created(){
-            this.tokenUser = JSON.parse(localStorage.getItem('tokenUser'))
-            this.tokenAdmin = JSON.parse(localStorage.getItem('tokenAdmin'))
-            if(this.tokenUser != null || this.tokenAdmin != null){
-                if(this.tokenUser != null){this.role = 'User'}
-                if(this.tokenAdmin != null){this.role = 'Admin'}
-                axios.post("http://localhost:5000/checkTokenLogin", {
-                    role: this.role,
-                    tokenUser: this.tokenUser,
-                    tokenAdmin: this.tokenAdmin,
-                }).then((response => {
-                    if(response.data.message == 'You can pass! (User)'){
-                        this.id = response.data.id
-                        this.permissionPath = '/user'
-                    }
-                    if(response.data.message == 'You can pass! (Admin)'){
-                        this.id = response.data.id
-                        this.manage_acc = response.data.rule_manage_acc
-                        this.manage_standand = response.data.rule_standand_admin
-                        this.permissionPath = '/admin'
-                    }
-                })).catch((err) => {
-                    this.$swal({
-                        icon: 'warning',
-                        title: 'Oops! Error Your token hahahaha.',
-                        showConfirmButton: true,
-                    })
-                    this.$router.push({ name: "Home" });
-                    console.log(err)
-                })  
-            }
-            else{
-                this.$swal({
-                    icon: 'warning',
-                    title: 'กรุณาล็อกอินก่อนเข้าใช้งาน',
-                    showConfirmButton: true,
-                })
-                this.$router.push({ name: "Home" });
-            }
+            this.tokenUser = Cookies.get('tokenUser')
+            this.tokenAdmin = Cookies.get('tokenAdmin')
+            if(this.tokenUser) {
+            this.role = "User"
+            this.permissionPath = "/user"
+        }
+        else if(this.tokenAdmin) {
+            this.role = "Admin"
+            this.permissionPath = "/admin"
+        }
+        else{
+            this.$swal({
+                icon: 'warning',
+                title: 'กรุณาล็อกอินก่อนเข้าใช้งาน',
+                showConfirmButton: true,
+            })
+            Cookies.remove("tokenUser")
+            Cookies.remove("tokenAdmin")
+            this.$router.push({ name: "Home" });
+        }
         },
         methods:{
             logout(){
                 this.id = ''
+                Cookies.remove("tokenUser")
+                Cookies.remove("tokenAdmin")
                 console.log('Log out!')
                 this.$router.push({ name: "Home" });
             },
            type_report: function(){
             if(this.type_select == null){
                 this.id_screen = false;
-                this.typescreen = false;
+                this.typescreen = true;
                 this.errortype = "กรุณาเลือกหมวดหมู่";
             }
             else{
@@ -207,16 +201,24 @@ export default {
             }
            },
            getreportform: function(type){
-                   axios.get("http://localhost:5000/getreportform/type/" + type)
-                   .then((response) => {
-                       this.reportforms = response.data.data;
-                       this.id_screen = !response.data.status;
-                       this.typescreen = response.data.status;
-                       this.errortype = response.data.error;
-                       this.title = "สถานะเรื่องร้องเรียน หมวดหมู่" + response.data.title;
-                   }).catch((err) => {
-                       console.log(err);
-                   })
+               this.$apollo.queries.Reports.refetch({
+                    filter: {
+                        type: type
+                    }
+                }).then((res) => {
+                    console.log(res)
+                    this.errortype = ""
+                })
+                //    axios.get("http://localhost:5000/getreportform/type/" + type)
+                //    .then((response) => {
+                //        this.Reports = response.data.data;
+                //        this.id_screen = !response.data.status;
+                //        this.typescreen = response.data.status;
+                //        this.errortype = response.data.error;
+                //        this.title = "สถานะเรื่องร้องเรียน หมวดหมู่" + response.data.title;
+                //    }).catch((err) => {
+                //        console.log(err);
+                //    })
             },
           id_report: function(){
                if(this.id_select == ""){
@@ -225,13 +227,13 @@ export default {
                     this.errorid = "กรุณากรอกหมายเลขประจำเอกสาร";
                }
                else{
-                    this.reportforms = this.getreportform_id(this.id_select);
+                    this.Reports = this.getreportform_id(this.id_select);
                }
            },
            getreportform_id: function(id){
                axios.get("http://localhost:5000/getreportform/searchbyid/" + id)
                     .then((response) => {
-                    this.reportforms = response.data.data;
+                    this.Reports = response.data.data;
                     this.id_screen = response.data.status;
                     this.typescreen = false;
                     this.errorid = response.data.error;
@@ -243,22 +245,22 @@ export default {
            tubestatus: function(status){
                var backgroundcolor = "#ffffff";
                var width = "37.5%";
-               if(status == 0){
+               if(status == "Received"){
                    width = "0%";
                }
-               else if(status == 1){
+               else if(status == "In_Progress"){
                    backgroundcolor = ""
                    width = "37.5%";
                }
-               else if(status == 2){
+               else if(status == "Accepted"){
                    backgroundcolor = "#FFCC00"
                    width = "62.5%";
                }
-               else if(status == 3){
+               else if(status == "Completed"){
                    backgroundcolor = "#6cc070"
                    width = "100%";
                }
-               else if(status == 4){
+               else if(status == "Declined"){
                    backgroundcolor = "#df4759"
                    width = "62.5%";
                }
@@ -270,7 +272,7 @@ export default {
                 if(status == index){
                     weight = "500";
                 }
-                else if(status == 4 && index == 2){
+                else if(status == "Declined" && index == "Accepted"){
                     weight = "500";
                 }
                 else{
@@ -280,7 +282,7 @@ export default {
                 return {weight : weight, opa: opacity}
             },
             extrafontstatus: function(status){
-                if(status == 4){return "ระบบไม่สามารถดำเนินการได้"}
+                if(status == "Declined"){return "ระบบไม่สามารถดำเนินการได้"}
                 else{return "ระบบกำลังดำเนินการ"}
             }
            }

@@ -8,15 +8,15 @@
             <li id="comp1" v-if="manage_acc == 1"><a href="/manageUser">Manage User</a></li>
             <li id="comp1" v-if="manage_standand == 1"><a href="/manageforum">Manage Forum</a></li>
             <li id="comp1" v-if="manage_standand == 1"><a href="/manageReport">Manage Report</a></li>
-            <template v-if="id ==''">
+            <template v-if="currentUser == null">
               <li id="comp2"><a href="/login">Log In</a></li>
               <div class="line"></div>
               <li id="comp2"><a href="/register">Register</a></li>
             </template>
-            <div class="dropdown" v-if="id !=''">
+            <div class="dropdown" v-if="currentUser != null">
                 <a href="/reportform" style="text-decoration: none;" v-show="role == 'User'"><button type="button" class="home btn btn-outline-light">Back Reportform</button></a>
                 <button class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i :class="{'fa fa-user-plus': role == 'Admin', 'fa fa-user': role == 'User'}"></i> {{id}}
+                    <i :class="{'fa fa-user-plus': role == 'Admin', 'fa fa-user': role == 'User'}"></i> {{currentUser.studentid}}
                 </button>
                 <p class="dropdown-menu" >
                     <button class="dropdown-item text-danger" type="button" @click="logout()">ออกจากระบบ</button>
@@ -46,7 +46,7 @@
                         <p id="error-message" v-if="!$v.description.minLength">*คำอธิบายควรมีความยาวไม่ต่ำกว่า 50 ตัวอักษร</p>
                     </template>
                 </div>
-                 <div class="form-group" v-if="type == 'สภาพสังคม'">
+                 <div class="form-group" v-if="type == 'sociality'">
                     <label for="report_topic">สถานที่ซึ่งต้องการร้องเรียน</label>
                     <input v-model="$v.sociality_location.$model" type="text" class="form-control" :class="{'is-invalid' : $v.sociality_location.$error}" id="report_topic" placeholder="ใส่สถานที่">
                     <template v-if="$v.sociality_location.$error">
@@ -55,7 +55,7 @@
                         <p id="error-message" v-if="!$v.sociality_location.maxLength">*ชื่อสถานที่ต้องมีความยาวไม่เกิน 255 ตัวอักษร</p>
                     </template>
                 </div>
-                <div class="form-group" v-if="type == 'การศึกษา'">
+                <div class="form-group" v-if="type == 'studying'">
                     <label for="report_topic">รหัสของรายวิชาที่ต้องการร้องเรียน</label>
                     <input v-model="$v.education_subject_id.$model" type="text" class="form-control" :class="{'is-invalid' : $v.education_subject_id.$error}" id="report_topic" aria-describedby="reporttopichelp" placeholder="ใส่รหัสวิชา">
                     <template v-if="$v.education_subject_id.$error">
@@ -64,7 +64,7 @@
                         <p id="error-message" v-if="!($v.education_subject_id.minLength && $v.education_subject_id.maxLength)">*รหัสวิชาต้องเป็นตัวเลข 8 หลักเท่านั้น</p>
                     </template>
                 </div>
-                <div class="form-group" aria-describedby="reporthelp" v-if="type == 'ทุนการศึกษา'">
+                <div class="form-group" aria-describedby="reporthelp" v-if="type == 'scholarship'">
                     <label for="report_topic">เลือกประเภททุนการศึกษา</label>
                     <select class="form-control" v-model="$v.scholarship_type.$model" :class="{'is-invalid' : $v.scholarship_type.$error}">
                         <option>ทุนอุดหนุนการศึกษาประภท ก</option>
@@ -84,7 +84,7 @@
                         <p id="error-message" v-if="!$v.scholarship_type.not_in">*คุณไม่สามารถใส่ข้อมูลนอกเหนือจากในข้อมูลที่เรามีให้ได้</p>
                     </template>
                 </div>
-                <div class="form-group" v-if="type == 'การลงทะเบียนเรียน'">
+                <div class="form-group" v-if="type == 'register_system'">
                     <label for="report_topic">รหัสของรายวิชาที่ต้องการร้องเรียน</label>
                     <input v-model="$v.register_subject.$model" type="text" class="form-control" :class="{'is-invalid' : $v.register_subject.$error}" id="report_topic" aria-describedby="reporttopichelp" placeholder="ใส่ชื่อของรายวิชา">
                     <template v-if="$v.register_subject.$error">
@@ -93,7 +93,7 @@
                         <p id="error-message" v-if="!($v.register_subject.minLength && $v.register_subject.maxLength)">*รหัสวิชาต้องเป็นตัวเลข 8 หลักเท่านั้น</p>
                     </template>
                 </div>
-                <div class="form-group" v-if="type == 'สภาพแวดล้อม'">
+                <div class="form-group" v-if="type == 'environment'">
                     <label for="report_topic">สถานที่ซึ่งต้องการร้องเรียน</label>
                     <input v-model="$v.environment_location.$model" type="text" class="form-control" :class="{'is-invalid' : $v.environment_location.$error}" id="report_topic" aria-describedby="reporttopichelp" placeholder="ใส่สถานที่">
                     <template v-if="$v.environment_location.$error">
@@ -105,8 +105,8 @@
                 <div class="form-group">
                     <label for="report_topic">เลือกเงื่อนไขในการร้องเรียน</label>
                     <select class="form-control" v-model="$v.send_status.$model" :class="{'is-invalid' : $v.send_status.$error}">
-                        <option>ไม่ด่วน</option>
-                        <option>ด่วน</option>
+                        <option value="Not_Urgent">ไม่ด่วน</option>
+                        <option value="Urgent">ด่วน</option>
                     </select>
                     <template v-if="$v.send_status.$error">
                         <p id="error-message" v-if="!$v.send_status.required">*กรุณาเติมข้อมูลในช่องนี้</p>
@@ -129,8 +129,9 @@
 </template>
 
 <script>
-import axios from "axios";
+import Cookies from "js-cookie"
 import {required, numeric, minLength, maxLength} from 'vuelidate/lib/validators'
+import { CURRENT_USER_QUERY, CREATE_REPORT_MUTATION } from "../graphql"
 
 const checkScholarshipType = (value) => {
     let allscholarship = ["ทุนอุดหนุนการศึกษาประภท ก", "ทุนอุดหนุนการศึกษาประภท ข", "ทุนเรียนดี", "ทุนผู้ทำคุณประโยชน์ให้แก่สถาบัน",
@@ -151,6 +152,7 @@ const checkScholarshipType = (value) => {
                 role: null,
                 id: '',
                 acc_id: 0,
+                currentUser: null,
                 manage_acc: null,
                 manage_standand: null,
                 permissionPath: null,
@@ -167,45 +169,30 @@ const checkScholarshipType = (value) => {
                 environment_location: ""
             }
         },
+        apollo: {
+            currentUser: {
+                query: CURRENT_USER_QUERY
+            }
+        },
         created () {
-            this.tokenUser = JSON.parse(localStorage.getItem('tokenUser'))
-            this.tokenAdmin = JSON.parse(localStorage.getItem('tokenAdmin'))
-            if(this.tokenUser != null){this.role = 'User'}
-            if(this.tokenAdmin != null){this.role = 'Admin'}
-            if(this.tokenUser != null || this.tokenAdmin != null){
-                axios.post("http://localhost:5000/checkTokenLogin", {
-                    role: this.role,
-                    tokenUser: this.tokenUser,
-                    tokenAdmin: this.tokenAdmin,
-                }).then((response => {
-                    if(response.data.message == 'You can pass! (User)'){
-                        this.id = response.data.id
-                        this.permissionPath = '/user'
-                        this.acc_id = response.data.acc_id;
-                    }
-                    if(response.data.message == 'You can pass! (Admin)'){
-                        this.id = response.data.id
-                        this.manage_acc = response.data.rule_manage_acc
-                        this.manage_standand = response.data.rule_standand_admin
-                        this.permissionPath = '/admin'
-                        this.acc_id = response.data.acc_id;
-                    }
-                })).catch((err) => {
-                    this.$swal({
-                        icon: 'warning',
-                        title: 'Oops! Error Your token hahahaha.',
-                        showConfirmButton: true,
-                    })
-                    this.$router.push({ name: "Home" });
-                    console.log(err)
-                })  
+            this.tokenUser = Cookies.get('tokenUser')
+            this.tokenAdmin = Cookies.get('tokenAdmin')
+            if(this.tokenUser) {
+                this.role = "User"
+                this.permissionPath = "/user"
+            }
+            else if(this.tokenAdmin) {
+                this.role = "Admin"
+                this.permissionPath = "/admin"
             }
             else{
                 this.$swal({
                     icon: 'warning',
                     title: 'กรุณาล็อกอินก่อนเข้าใช้งาน',
                     showConfirmButton: true,
-                })
+                 })
+                Cookies.remove("tokenUser")
+                Cookies.remove("tokenAdmin")
                 this.$router.push({ name: "Home" });
             }
             this.backcolor = localStorage.getItem("color");
@@ -215,130 +202,58 @@ const checkScholarshipType = (value) => {
         methods: {
             logout(){
                 this.id = ''
+                Cookies.remove("tokenUser")
+                Cookies.remove("tokenAdmin")
                 console.log('Log out!')
                 this.$router.push({ name: "Home" });
             },
             submit() {
                 this.$v.$touch();
                 const basicinput = (!this.$v.topic.$error && !this.$v.description.$error && !this.$v.send_status.$error)
+                let data = {
+                    "topic" : this.topic,
+                    "type" : this.type,
+                    "description" : this.description,
+                    "condition_of_submission" : this.send_status,
+                    "complainer_id" : this.currentUser._id
+                }
                 if(!this.$v.sociality_location.$error && basicinput) {
-                    let data = {
-                        reporttype: this.type,
-                        topic: this.topic,
-                        description: this.description,
-                        send_status: this.send_status,
-                        sociality_location: this.sociality_location,
-                        acc_id: this.acc_id
-                    }
-                    axios.post("http://localhost:5000/createreport/sociality", data)
-                    .then((res) => {
-                        this.$router.push({name: 'Reportform'})
-                        this.$swal({
-                            title: res.data,
-                            icon: 'success'
-                        });
-                    }).catch((err) => {
-                        this.$swal({
-                            title: err.data,
-                            icon: 'error'
-                        });
-                    })
+                    data["target"] = this.sociality_location
                 }
                 else if(!this.$v.education_subject_id.$error && basicinput) {
-                    let data = {
-                        reporttype: this.type,
-                        topic: this.topic,
-                        description: this.description,
-                        send_status: this.send_status,
-                        education_subject_id: this.education_subject_id,
-                        acc_id: this.acc_id
-                    }
-                    axios.post("http://localhost:5000/createreport/education", data)
-                    .then((res) => {
-                        this.$router.push({name: 'Reportform'})
-                        this.$swal({
-                            title: res.data,
-                            icon: 'success'
-                        });
-                    }).catch((err) => {
-                        this.$swal({
-                            title: err.data,
-                            icon: 'error'
-                        });
-                    })
+                    data["target"] = this.education_subject_id
                 }
-                else if(!this.$v.scholarship_type.$error && basicinput) {
-                    let data = {
-                        reporttype: this.type,
-                        topic: this.topic,
-                        description: this.description,
-                        send_status: this.send_status,
-                        scholarship_type: this.scholarship_type,
-                        acc_id: this.acc_id
-                    }
-                    axios.post("http://localhost:5000/createreport/scholarship", data)
-                    .then((res) => {
-                        this.$router.push({name: 'Reportform'})
-                        this.$swal({
-                            title: res.data,
-                            icon: 'success'
-                        });
-                    }).catch((err) => {
-                        this.$swal({
-                            title: err.data,
-                            icon: 'error'
-                        });
-                    })
+                else if(!this.$v.scholarship_type.$error && basicinput) { 
+                    data["target"] = this.scholarship_type
                 }
-                else if(!this.$v.register_subject.$error && basicinput) {
-                    let data = {
-                        reporttype: this.type,
-                        topic: this.topic,
-                        description: this.description,
-                        send_status: this.send_status,
-                        register_subject: this.register_subject,
-                        acc_id: this.acc_id
-                    }
-                    axios.post("http://localhost:5000/createreport/register", data)
-                    .then((res) => {
-                        this.$router.push({name: 'Reportform'})
-                        this.$swal({
-                            title: res.data,
-                            icon: 'success'
-                        });
-                    }).catch((err) => {
-                        this.$swal({
-                            title: err.data,
-                            icon: 'error'
-                        });
-                    })
+                else if(!this.$v.register_subject.$error && basicinput) { 
+                    data["target"] = this.register_subject
                 }
                 else if(!this.$v.environment_location.$error && basicinput) {
-                    let data = {
-                        reporttype: this.type,
-                        topic: this.topic,
-                        description: this.description,
-                        send_status: this.send_status,
-                        environment_location: this.environment_location,
-                        acc_id: this.acc_id
-                    }
-                    axios.post("http://localhost:5000/createreport/environment", data)
-                    .then((res) => {
-                        this.$router.push({name: 'Reportform'})
-                        this.$swal({
-                            title: res.data,
-                            icon: 'success'
-                        });
-                    }).catch((err) => {
-                        this.$swal({
-                            title: err.data,
-                            icon: 'error'
-                        });
-                    })
+                    data["target"] = this.environment_location
                 }
                 else{
                     this.$v.$touch();
                 }
+                    console.log(data)
+                    this.$apollo.mutate({
+                        mutation : CREATE_REPORT_MUTATION,
+                        variables : {
+                            "record" : data
+                        }
+                    }).then((res) => {
+                        console.log(res)
+                        this.$router.push({name: 'Reportform'})
+                        this.$swal({
+                            title: "ส่งคำร้องเรียนสำเร็จ",
+                            icon: 'success'
+                        });
+                    }).catch((err) => {
+                        this.$swal({
+                            title: err,
+                            icon: 'error'
+                        });
+                    })
             }
         },
    validations: {
@@ -354,7 +269,7 @@ const checkScholarshipType = (value) => {
      send_status: {
          required,
          not_in: (value) => {
-            if(value == "ด่วน" || value == "ไม่ด่วน"){
+            if(value == "Not_Urgent" || value == "Urgent"){
                 return true;
             }
             return false;

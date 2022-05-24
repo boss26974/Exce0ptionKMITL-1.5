@@ -100,8 +100,7 @@
                         v-model.number.lazy="$v.studentID.$model"
                         :class="{
                           'is-invalid':
-                            validationStatusError($v.studentID) ||
-                            studentidError == 'error',
+                            validationStatusError($v.studentID),
                           'is-valid': !$v.studentID.$invalid,
                         }"
                         id="InputIdReg"
@@ -174,8 +173,8 @@
                         id="SelectStatusReg"
                       >
                         <option hidden value="">Chose your status..</option>
-                        <option>กำลังศึกษาอยู่</option>
-                        <option>จบการศึกษาแล้ว</option>
+                        <option value="studying">กำลังศึกษาอยู่</option>
+                        <option value="graduated">จบการศึกษาแล้ว</option>
                       </select>
                       <div class="invalid-feedback">
                         <span v-if="!$v.status.required">กรุณาเลือกสถานะ</span>
@@ -184,23 +183,6 @@
                     </div>
                   </div>
                 </div>
-              </div>
-
-              <div
-                class="alert alert-success alert-dismissible fade show"
-                role="alert"
-                v-if="studentidError == 'error'"
-              >
-                StudentID นี้ถูกใช้งานแล้ว
-                <button
-                  type="button"
-                  class="close"
-                  data-dismiss="alert"
-                  aria-label="Close"
-                  @click="studentid_reset()"
-                >
-                  <span aria-hidden="true">&times;</span>
-                </button>
               </div>
 
               <div class="form-group">
@@ -215,7 +197,7 @@
                   v-model.trim.lazy="$v.email.$model"
                   :class="{
                     'is-invalid':
-                      validationStatusError($v.email) || emailError == 'error',
+                      validationStatusError($v.email),
                     'is-valid': !$v.email.$invalid,
                   }"
                   id="InputEmailReg"
@@ -224,22 +206,6 @@
                   <span v-if="!$v.email.required">กรุณากรอก Email</span>
                   <span v-if="!$v.email.email">Email ไม่ถูกต้อง</span>
                 </div>
-              </div>
-              <div
-                class="alert alert-success alert-dismissible fade show"
-                role="alert"
-                v-if="emailError == 'error'"
-              >
-                Email นี้ถูกใช้งานแล้ว
-                <button
-                  type="button"
-                  class="close"
-                  data-dismiss="alert"
-                  aria-label="Close"
-                  @click="email_reset()"
-                >
-                  <span aria-hidden="true">&times;</span>
-                </button>
               </div>
               <div class="form-group">
                 <label
@@ -402,7 +368,7 @@ import {
   sameAs,
   integer,
 } from "vuelidate/lib/validators";
-import axios from "axios";
+import { CREATE_USER_MUTATION }  from "../graphql"
 
 function specialChar(value){
   if(value.match(/[0-9!@#$%^&*)(+=._-]/)){return false;}
@@ -433,8 +399,6 @@ export default {
       dataReg: "",
       messageRegOK: "",
       // backend error
-      studentidError: "",
-      emailError: "",
     };
   },
   validations:{
@@ -502,12 +466,6 @@ export default {
         x.type = "password";
       }
     },
-    studentid_reset() {
-      this.studentidError = "";
-    },
-    email_reset() {
-      this.emailError = "";
-    },
     resetData() {
       this.firstname = "";
       this.lastname = "";
@@ -521,38 +479,37 @@ export default {
     validationStatusError(validation) {
       return typeof validation != "undefined" ? validation.$error : false;
     },
-    submit() {
-      this.br = "";
-      this.$v.$touch();
-      if (this.$v.$pendding || this.$v.$error) return;
-      axios
-        .post("http://localhost:5000/register/submit", {
-            Firstname: this.firstname,
-            Lastname: this.lastname,
-            StudentID: this.studentID,
-            Status: this.status,
-            Email: this.email,
-            Password: this.passWord,
-            repeatPassword: this.repeatPassword
+      submit() {
+        this.br = "";
+        this.$v.$touch();
+        if (this.$v.$pendding || this.$v.$error) return;
+        this.$apollo.mutate({
+          mutation : CREATE_USER_MUTATION,
+          variables : {
+           "record" : {
+              "fname" : this.firstname,
+              "lname" : this.lastname,
+              "email" : this.email,
+              "password" : this.passWord,
+              "studentid" : this.studentID.toString(),
+              "status" : this.status
+            }
+          }
         })
-        .then((response) => {
-          const data = response.data;
-          if (data.message == "register success Let's Login!") {
-            this.studentidError = "";
-            this.emailError = "";
-            this.messageRegOK = data.message;
-            console.log(response);
+        .then((res) => {
+          const data = res.data.createUser;
+          if (data.recordId) {
+            this.messageRegOK = "register success Let's Login!";
+            console.log(res);
             this.$v.$reset();
             this.resetData();
-          } else {
-            this.studentidError = data.errorStudentid;
-            this.emailError = data.errorEmail;
           }
         })
         .catch((err) => {
-          alert(err);
+          alert("test");
+          console.log(err)
         });
-    },
+      }
   },
 };
 </script>

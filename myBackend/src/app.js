@@ -14,7 +14,7 @@ const app = express()
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cors({
-  origin: 'http://localhost:3000', //น่าจะต้องแก้ถ้าจะ deploy
+  origin: 'http://localhost:8080', //น่าจะต้องแก้ถ้าจะ deploy
   credentials: true
 }))
 app.use(cookieParser())
@@ -36,9 +36,12 @@ const startApolloServer = async () => {
       const { cookies, headers } = req
       // console.log(req?.cookies)
       let token = null
-      if (cookies?.token) {
-        token = cookies?.token
+      if (cookies?.tokenUser) {
+        token = cookies?.tokenUser
         // console.log(token)
+      }
+      if (cookies?.tokenAdmin) {
+        token = cookies?.tokenAdmin
       }
       if (headers?.authorization?.split(' ')?.[0] === 'Bearer') {
         //ไว้ทดสอบผ่าน playground

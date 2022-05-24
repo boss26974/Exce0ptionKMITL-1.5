@@ -9,7 +9,7 @@
                     <a href="/user" style="text-decoration: none;"><button type="button" class="home btn btn-outline-light">Home</button></a>
                     <div class="dropdown">
                         <button class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fas fa-user"></i> {{id}}
+                            <i class="fas fa-user"></i> {{currentUser.studentid}}
                         </button>
                         <p class="dropdown-menu" >
                             <button class="dropdown-item text-danger" type="button" @click="modal_changepassword = true;">เปลี่ยนรหัสผ่าน</button>
@@ -226,7 +226,7 @@
                         <p><a href=""><br><span>05<br>เสียงก่อสร้างรบกวนการเรียนครับ</span><br><br></a></p>
                     </div>
                     <div class="col-md-4">
-                        <p><a href=""><br><span>06<br>ผมขอ <span id="A">A</span> Webpro เถอะครับ</span><br><br></a></p>
+                        <p><a href=""><br><span>06<br>ผมขอ <span id="A">A</span> Fullstck เถอะครับ</span><br><br></a></p>
                     </div>
                 </div>
             </div>
@@ -307,7 +307,8 @@
 </template>
 <script>
 import { required,  maxLength, minLength, sameAs } from 'vuelidate/lib/validators';
-import axios from 'axios';
+import Cookies from "js-cookie"
+import { CURRENT_USER_QUERY, CHANGE_PASSWORD_MUTATION } from "../graphql"
 
 function complexPassword(value) {
   if (!(value.match(/[a-z]/) && value.match(/[A-Z]/) && value.match(/[0-9]/))) {
@@ -315,20 +316,23 @@ function complexPassword(value) {
   }
   return true;
 }
-
 export default {
     data(){
         return{
             permission: null,
             tokenUser: null,
             tokenAdminError: null,
-            id: '',
-            acc_id: null,
+            currentUser: null,
             // change password
             modal_changepassword: false,
             Newpassword: '',
             RepeatNewpassword: '',
             currentPassword: '',
+        }
+    },
+    apollo: {
+        currentUser: {
+            query: CURRENT_USER_QUERY
         }
     },
     validations:{
@@ -348,59 +352,35 @@ export default {
         }
     },
     created(){
-        this.tokenUser = JSON.parse(localStorage.getItem('tokenUser'))
-        this.tokenAdminError = JSON.parse(localStorage.getItem('tokenAdmin'))
-        if(this.tokenUser != null){
-            this.permission = 'for user'
-            axios.post("http://localhost:5000/checkTokenLogin", {
-                role: 'User',
-                tokenUser: this.tokenUser
-            }).then((response => {
-                    if(response.data.message == 'You can pass! (User)'){
-                        this.id = response.data.id
-                        this.acc_id = response.data.acc_id
-                    }
-                    else{
-                        this.$swal({
-                            icon: 'warning',
-                            title: "You can't access the user, you are the admin.! hahaha.",
-                            showConfirmButton: true,
-                        })
-                        this.$router.push({ name: "Home" });
-                    }
-                    console.log(response)
-            })).catch((err) => {                
-                this.$swal({
-                    icon: 'warning',
-                    title: "Oops! Error Your token hahahaha.",
-                    showConfirmButton: true,
-                })
-                this.$router.push({ name: "Home" });
-                console.log(err)
+        this.tokenUser = Cookies.get("tokenUser")
+        this.tokenAdminError = Cookies.get("tokenAdmin")
+        if(this.tokenUser) {
+            this.permission = "for user"
+        }
+        else if(this.tokenAdmin) {
+            this.$swal({
+                icon: 'warning',
+                title: "You can't access the user, you are the admin.! hahaha.",
+                showConfirmButton: true,
             })
+            this.$router.push({ name: "Admin" });
         }
         else{
-            if(this.tokenAdminError != null){
-                this.$swal({
-                    icon: 'warning',
-                    title: "You can't access the user, you are the admin.! hahaha.",
-                    showConfirmButton: true,
-                })
-                this.$router.push({ name: "Home" });
-            }
-            else{
-                this.$swal({
-                    icon: 'warning',
-                    title: 'กรุณาล็อกอินก่อนเข้าใช้งาน',
-                    showConfirmButton: true,
-                })
-                this.$router.push({ name: "Home" });
-            }
+            this.$swal({
+                icon: 'warning',
+                title: "กรุณาล็อกอินก่อนเข้าใช้งาน",
+                showConfirmButton: true,
+            })
+            Cookies.remove("tokenUser")
+            Cookies.remove("tokenAdmin")
+            this.$router.push({ name: "Home" });
         }
     },
     methods:{
         logout(){
             this.id = ''
+            Cookies.remove("tokenUser")
+            Cookies.remove("tokenAdmin")
             this.$router.push({ name: "Home" });
         },
         validationStatusError(validation){
@@ -443,13 +423,15 @@ export default {
         changepassword(){
             this.$v.$touch();
             if( this.$v.$pendding || this.$v.$error ) return;
-            axios.put("http://localhost:5000/changepassword", {
-                Newpassword: this.Newpassword,
-                RepeatNewpassword: this.RepeatNewpassword,
-                currentPassword: this.currentPassword,
-                acc_id: this.acc_id
-            }).then((response) => {
-                if(response.data.message == 'เปลี่ยนรหัสผ่านสำเร็จ'){
+            this.$apollo.mutate({
+                mutation: CHANGE_PASSWORD_MUTATION,
+                variables: {
+                    _id: this.currentUser._id,
+                    old_password: this.currentPassword,
+                    new_password: this.Newpassword
+                }
+            }).then((res) => {
+                if(res.data.changePassword.status == "Success"){
                     this.resetmodal()
                     this.$swal({
                         icon: 'success',
@@ -467,8 +449,6 @@ export default {
                         timer: 2000
                     })
                 }
-            }).catch((err) => {
-                console.log(err)
             })
         },
     }

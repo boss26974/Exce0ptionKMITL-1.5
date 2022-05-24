@@ -8,15 +8,15 @@
             <li id="comp1" v-if="manage_acc == 1"><a href="/manageUser">Manage User</a></li>
             <li id="comp1" v-if="manage_standand == 1"><a href="/manageforum">Manage Forum</a></li>
             <li id="comp1" v-if="manage_standand == 1"><a href="/manageReport">Manage Report</a></li>
-            <template v-if="id ==''">
+            <template v-if="currentUser == null">
                 <li id="comp2"><a href="/login">Log In</a></li>
                 <div class="line"></div>
                 <li id="comp2"><a href="/register">Register</a></li>
             </template>
-            <div class="dropdown" v-if="id !=''">
+            <div class="dropdown" v-if="currentUser != null">
                 <a :href="`${permissionPath}`" style="text-decoration: none;" v-show="role == 'User'"><button type="button" class="home btn btn-outline-light">Home</button></a>
                 <button class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i :class="{'fa fa-user-plus': role == 'Admin', 'fa fa-user': role == 'User'}"></i> {{id}}
+                    <i :class="{'fa fa-user-plus': role == 'Admin', 'fa fa-user': role == 'User'}"></i> {{currentUser.studentid}}
                 </button>
                 <p class="dropdown-menu" >
                     <button class="dropdown-item text-danger" type="button" @click="logout()">ออกจากระบบ</button>
@@ -90,49 +90,35 @@
 </template>
 
 <script>
-import axios from "axios";
+import Cookies from "js-cookie"
+import { CURRENT_USER_QUERY } from "../graphql"
 export default {
     data() {
         return{
             tokenUser: null,
             tokenAdmin: null,
             role: null,
-            id: '',
+            currentUser: null,
             manage_acc: null,
             manage_standand: null,
             permissionPath: null,
         }
     },
+    apollo: {
+        currentUser: {
+            query: CURRENT_USER_QUERY
+        }
+    },
     created(){
-        this.tokenUser = JSON.parse(localStorage.getItem('tokenUser'))
-        this.tokenAdmin = JSON.parse(localStorage.getItem('tokenAdmin'))
-        if(this.tokenUser != null || this.tokenAdmin != null){
-            if(this.tokenUser != null){this.role = 'User'}
-            if(this.tokenAdmin != null){this.role = 'Admin'}
-            axios.post("http://localhost:5000/checkTokenLogin", {
-                role: this.role,
-                tokenUser: this.tokenUser,
-                tokenAdmin: this.tokenAdmin,
-            }).then((response => {
-                if(response.data.message == 'You can pass! (User)'){
-                    this.id = response.data.id
-                    this.permissionPath = '/user'
-                }
-                if(response.data.message == 'You can pass! (Admin)'){
-                    this.id = response.data.id
-                    this.manage_acc = response.data.rule_manage_acc
-                    this.manage_standand = response.data.rule_standand_admin
-                    this.permissionPath = '/admin'
-                }
-            })).catch((err) => {
-                this.$swal({
-                    icon: 'warning',
-                    title: 'Oops! Error Your token hahahaha.',
-                    showConfirmButton: true,
-                })
-                this.$router.push({ name: "Home" });
-                console.log(err)
-            })  
+        this.tokenUser = Cookies.get('tokenUser')
+        this.tokenAdmin = Cookies.get('tokenAdmin')
+        if(this.tokenUser) {
+            this.role = "User"
+            this.permissionPath = "/user"
+        }
+        else if(this.tokenAdmin) {
+            this.role = "Admin"
+            this.permissionPath = "/admin"
         }
         else{
             this.$swal({
@@ -140,35 +126,39 @@ export default {
                 title: 'กรุณาล็อกอินก่อนเข้าใช้งาน',
                 showConfirmButton: true,
             })
+            Cookies.remove("tokenUser")
+            Cookies.remove("tokenAdmin")
             this.$router.push({ name: "Home" });
         }
     },
     methods: {
         logout(){
             this.id = ''
+            Cookies.remove("tokenUser")
+            Cookies.remove("tokenAdmin")
             console.log('Log out!')
             this.$router.push({ name: "Home" });
         },
         createreport: function(type){
             if(type == "สภาพสังคม"){
                 localStorage.setItem("color", "#6BDCA8");
-                localStorage.setItem("type", "สภาพสังคม");
+                localStorage.setItem("type", "sociality");
             }
             else if(type == "การศึกษา"){
                 localStorage.setItem("color", "#E35205");
-                localStorage.setItem("type", "การศึกษา");
+                localStorage.setItem("type", "studying");
             }
             else if(type == "ทุนการศึกษา"){
                 localStorage.setItem("color", "#3FAAF6");
-                localStorage.setItem("type", "ทุนการศึกษา");
+                localStorage.setItem("type", "scholarship");
             }
             else if(type == "การลงทะเบียนเรียน"){
                 localStorage.setItem("color", "#DA8DFB");
-                localStorage.setItem("type", "การลงทะเบียนเรียน");
+                localStorage.setItem("type", "register_system");
             }
             else if(type == "สภาพแวดล้อม"){
                 localStorage.setItem("color", "#F5B406");
-                localStorage.setItem("type", "สภาพแวดล้อม");
+                localStorage.setItem("type", "environment");
             }
             window.location.href = "/reportform/createreport"
         }
