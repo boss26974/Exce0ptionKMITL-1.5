@@ -40,11 +40,10 @@ const startApolloServer = async () => {
         token = cookies?.token
         // console.log(token)
       }
-      if (headers?.authorization?.split(' ')?.[0] === 'Bearer' && !headers.authorization.split(' ')[1] == true) {
+      if (headers?.authorization?.split(' ')?.[0] === 'Bearer') {
         //ไว้ทดสอบผ่าน playground
         token = headers?.authorization?.split(' ')?.[1]
-
-        console.log(headers.authorization)
+        // console.log(headers.authorization)
       }
       if (token) {
         const payload = jsonwebtoken.verify(token, process.env.JWT_SECRET)
