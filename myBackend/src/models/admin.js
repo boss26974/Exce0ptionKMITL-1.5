@@ -3,11 +3,7 @@ import { model, Schema } from 'mongoose'
 import mongooseBcrypt from 'mongoose-bcrypt'
 
 const AdminSchema = new Schema({
-  fname: {
-    type: String,
-    required: true,
-  },
-  lname: {
+  name: {
     type: String,
     required: true
   },
@@ -22,10 +18,6 @@ const AdminSchema = new Schema({
     type: String,
     required: true,
     bcrypt: true
-  },
-  access_key: {
-    type: String,
-    required: true,
   },
   role_manage_admin_acc: {
     type: Boolean,
