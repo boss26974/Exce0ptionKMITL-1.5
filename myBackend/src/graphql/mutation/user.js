@@ -1,6 +1,7 @@
-import { schemaComposer } from "graphql-compose";
+import { resolveMaybeThunk, schemaComposer } from "graphql-compose";
 import { Schema } from "mongoose";
 import { generateToken } from "../../lib/generateToken";
+import { AdminModel } from "../../models/admin";
 import { UserModel, UserTC } from "../../models/user";
 
 export const createUser = UserTC.mongooseResolvers.createOne() //register
@@ -13,6 +14,7 @@ const LoginPayloadOTC = schemaComposer.createObjectTC({
         status: 'String!',
         message: 'String',
         token: 'String',
+        role: 'String'
     },
 })
 export const login = schemaComposer.createResolver({
@@ -26,17 +28,29 @@ export const login = schemaComposer.createResolver({
     resolve: async ({ args }) => {
         const { email, password } = args
         const user = await UserModel.findOne({ email: email.toLowerCase() })
-        if (!user) {
-            return { status: 'failed', message: 'email not found', token: null }
+        const admin = await AdminModel.findOne({ email: email.toLowerCase() })
+        let role = null
+        let validPassword = null
+        if (!user && !admin) {
+            return { status: 'failed', message: 'email not found', token: null}
         }
-        const validPassword = await user.verifyPassword(password) //verify by JWT
+
+        if (user) {
+            validPassword = await user.verifyPassword(password)
+            role = "user"
+        }
+        else if (admin) {
+            validPassword = await admin.verifyPassword(password)
+            role = "admin"
+        }
+
         if (!validPassword) {
             return {
                 status: 'failed', message: 'Password incorrect', token: null
             }
         }
         const token = generateToken(user)
-        return { status: 'success', message: 'Login success', token }
+        return { status: 'success', message: 'Login success', token, role }
     },
 })
 
