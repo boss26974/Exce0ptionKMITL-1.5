@@ -5,18 +5,21 @@
         <a :href="`${permissionPath}`"><img src="/image/navbar/newlogo.png" width="110px" height="auto" style="padding-left: 20px;" alt=""></a>
           <ul>
             <div id="MyClockDisplay" class="clock"></div>
-            <li id="comp1" v-if="manage_acc == 1"><a href="/manageUser">Manage User</a></li>
-            <li id="comp1" v-if="manage_standand == 1"><a href="/manageforum">Manage Forum</a></li>
-            <li id="comp1" v-if="manage_standand == 1"><a href="/manageReport">Manage Report</a></li>
-            <template v-if="currentUser == null">
+            <li id="comp1" v-if="currentAdmin"><a href="/manageUser">Manage User</a></li>
+            <li id="comp1" v-if="currentAdmin"><a href="/manageforum">Manage Forum</a></li>
+            <li id="comp1" v-if="currentAdmin"><a href="/manageReport">Manage Report</a></li>
+            <template v-if="!currentUser && !currentAdmin">
               <li id="comp2"><a href="/login">Log In</a></li>
               <div class="line"></div>
               <li id="comp2"><a href="/register">Register</a></li>
             </template>
-            <div class="dropdown" v-if="currentUser != null">
+            <div class="dropdown" v-if="currentUser || currentAdmin">
                 <a href="/reportform" style="text-decoration: none;" v-show="role == 'User'"><button type="button" class="home btn btn-outline-light">Back Reportform</button></a>
-                <button class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i :class="{'fa fa-user-plus': role == 'Admin', 'fa fa-user': role == 'User'}"></i> {{currentUser.studentid}}
+                <button v-if="currentUser" class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class='fa fa-user'></i> {{currentUser.studentid}}
+                </button>
+                <button v-if="currentAdmin" class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                  <i class='fa fa-user-plus'></i> {{currentAdmin.name}}
                 </button>
                 <p class="dropdown-menu" >
                     <button class="dropdown-item text-danger" type="button" @click="logout()">ออกจากระบบ</button>
@@ -130,7 +133,7 @@
 <script>
 import Cookies from "js-cookie"
 import {required, numeric, minLength, maxLength} from 'vuelidate/lib/validators'
-import { CURRENT_USER_QUERY, CREATE_REPORT_MUTATION } from "../graphql"
+import { CURRENT_USER_QUERY, CREATE_REPORT_MUTATION, CURRENT_ADMIN_QUERY } from "../graphql"
 
 const checkScholarshipType = (value) => {
     let allscholarship = ["ทุนอุดหนุนการศึกษาประภท ก", "ทุนอุดหนุนการศึกษาประภท ข", "ทุนเรียนดี", "ทุนผู้ทำคุณประโยชน์ให้แก่สถาบัน",
@@ -149,11 +152,8 @@ const checkScholarshipType = (value) => {
                 tokenUser: null,
                 tokenAdmin: null,
                 role: null,
-                id: '',
-                acc_id: 0,
                 currentUser: null,
-                manage_acc: null,
-                manage_standand: null,
+                currentAdmin: null,
                 permissionPath: null,
                 // createreport
                 backcolor: "#ffffff",
@@ -171,6 +171,9 @@ const checkScholarshipType = (value) => {
         apollo: {
             currentUser: {
                 query: CURRENT_USER_QUERY
+            },
+            currentAdmin: {
+                query: CURRENT_ADMIN_QUERY
             }
         },
         created () {
@@ -200,7 +203,6 @@ const checkScholarshipType = (value) => {
         },
         methods: {
             logout(){
-                this.id = ''
                 Cookies.remove("tokenUser")
                 Cookies.remove("tokenAdmin")
                 console.log('Log out!')
@@ -209,12 +211,15 @@ const checkScholarshipType = (value) => {
             submit() {
                 this.$v.$touch();
                 const basicinput = (!this.$v.topic.$error && !this.$v.description.$error && !this.$v.send_status.$error)
+                let use_id = null
+                if(this.currentUser){use_id = this.currentUser._id}
+                if(this.currentAdmin){use_id = this.currentAdmin._id}
                 let data = {
                     "topic" : this.topic,
                     "type" : this.type,
                     "description" : this.description,
                     "condition_of_submission" : this.send_status,
-                    "complainer_id" : this.currentUser._id
+                    "complainer_id" : use_id
                 }
                 if(!this.$v.sociality_location.$error && basicinput) {
                     data["target"] = this.sociality_location

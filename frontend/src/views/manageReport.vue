@@ -6,12 +6,12 @@
                 <a href="/admin"><img src="/image/navbar/newlogo.png" width="110px" height="auto" style="padding-left: 20px;" alt=""></a>
                 <ul>
                     <div id="MyClockDisplay" class="clock"></div>
-                    <li id="comp1" v-if="manage_acc == 1"><a href="/manageUser">Manage User</a></li>
-                    <li id="comp1" v-if="manage_standand == 1"><a href="/manageforum">Manage Forum</a></li>
-                    <li id="comp1" v-if="manage_standand == 1"><a href="/manageReport">Manage Report</a></li>
+                    <li id="comp1" v-if="currentAdmin.role_manage_admin_acc"><a href="/manageUser">Manage User</a></li>
+                    <li id="comp1" v-if="currentAdmin.role_manage_admin_acc"><a href="/manageforum">Manage Forum</a></li>
+                    <li id="comp1" v-if="currentAdmin.role_manage_admin_acc"><a href="/manageReport">Manage Report</a></li>
                     <div class="dropdown">
                         <button class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fa fa-user-plus"></i> {{id}}
+                            <i class="fa fa-user-plus"></i> {{currentAdmin.name}}
                         </button>
                         <p class="dropdown-menu" >
                             <button class="dropdown-item text-danger" type="button" @click="logout()">ออกจากระบบ</button>
@@ -333,15 +333,16 @@
 
 <script>
 import axios from "axios";
+import Cookies from "js-cookie"
+import { CURRENT_ADMIN_QUERY, CURRENT_USER_QUERY } from "../graphql"
 export default {
     data() {
         return {
             permission: null,
             tokenAdmin: null,
             tokenUserError: null,
-            id: '',
-            manage_acc: null,
-            manage_standand: null,
+            currentAdmin: null,
+            currentUser: null,
             // start
             data: null,
             report_form_all: [],
@@ -425,96 +426,37 @@ export default {
             status_environment: null
         };
     },
-    created() {
-    this.tokenAdmin = JSON.parse(localStorage.getItem('tokenAdmin'))
-    this.tokenUserError = JSON.parse(localStorage.getItem('tokenUser'))
-    if(this.tokenAdmin != null){
-        this.permission = 'for admin'
-        axios.post("http://localhost:5000/checkTokenLogin", {
-            role: 'Admin',
-            tokenAdmin: this.tokenAdmin
-        }).then((response => {
-                if(response.data.message == 'You can pass! (Admin)'){
-                    this.id = response.data.id
-                    this.manage_acc = response.data.rule_manage_acc
-                    this.manage_standand = response.data.rule_standand_admin
-                }
-                else{
-                    this.$swal({
-                        icon: 'warning',
-                        title: 'Only Admin.',
-                        showConfirmButton: true,
-                    })
-                    this.$router.push({ name: "Home" });
-                }
-                console.log(response)
-        })).catch((err) => {
-            this.$swal({
-                icon: 'warning',
-                title: 'Oops! Error Your token hahahaha.',
-                showConfirmButton: true,
-            })
-            this.$router.push({ name: "Home" });
-            console.log(err)
-        })
-    }
-    else{
-        if(this.tokenUserError != null){
-            this.$swal({
-                icon: 'warning',
-                title: 'Only Admin.',
-                showConfirmButton: true,
-            })
-            this.$router.push({ name: "Home" });
+    apollo: {
+        currentAdmin: {
+            query: CURRENT_ADMIN_QUERY
+        },
+        currentUser: {
+            query: CURRENT_USER_QUERY
         }
-        else{
-            this.$swal({
-                icon: 'warning',
-                title: 'กรุณาล็อกอินก่อนเข้าใช้งาน (Only Admin)',
-                showConfirmButton: true,
-            })
-            this.$router.push({ name: "Home" });
-        }
-    }
-    // get data
-    axios.get("http://localhost:5000/dataReport")
-      .then((response) => {
-        var i;
-        // set ตามประเภท
-        this.data = response.data;
-        this.report_form_sociality = this.data.report_sociality
-        this.report_form_studying = this.data.report_studying
-        this.report_form_scholarship = this.data.report_scholarship
-        this.report_form_register = this.data.report_register
-        this.report_form_environment = this.data.report_environment
-        // Loop รวม report ทั้งหมด
-        for(i = 0 ; this.report_form_sociality.length > i ; i++){
-            this.report_form_all.push(this.report_form_sociality[i]);
-        }
-        for(i = 0 ; this.report_form_studying.length > i; i++){
-            this.report_form_all.push(this.report_form_studying[i]);
-        }
-        for(i = 0 ; this.report_form_environment.length > i; i++){
-            this.report_form_all.push(this.report_form_environment[i]);
-        }
-        for(i = 0 ; this.report_form_scholarship.length > i; i++){
-            this.report_form_all.push(this.report_form_scholarship[i]);
-        }
-        for(i = 0 ; this.report_form_register.length > i ; i++){
-            this.report_form_all.push(this.report_form_register[i]);
-        }
-        // loop แก้ไข format date ทั้งหมด
-        for(i = 0; i < this.report_form_all.length; i++){
-            this.report_form_all[i].report_form_date_time = (new Date(this.report_form_all[i].report_form_date_time)).toString().substring(0,24);
-        }
-        // copy report ไว้ใช้ ในการทำ filter
-        this.report_form_all_copy = this.report_form_all
-        // console.log(this.report_form_all)
-      })
-      .catch((err) => {
-        console.log(err);
-      });
     },
+  created() {
+    this.tokenAdmin = Cookies.get("tokenAdmin");
+    this.tokenUserError = Cookies.get("tokenUser");
+    if (this.tokenAdmin) {
+      this.permission = "for admin";
+    } else if (this.tokenUserError) {
+      this.$swal({
+        icon: "warning",
+        title: "You can't access the admin, you are the user.! hahaha.",
+        showConfirmButton: true,
+      });
+      this.$router.push({ name: "User" });
+    } else {
+      this.$swal({
+        icon: "warning",
+        title: "กรุณาล็อกอินก่อนเข้าใช้งาน",
+        showConfirmButton: true,
+      });
+      Cookies.remove("tokenUser");
+      Cookies.remove("tokenAdmin");
+      this.$router.push({ name: "Home" });
+    }
+  },
     methods: {
         logout() {
         this.id = "";

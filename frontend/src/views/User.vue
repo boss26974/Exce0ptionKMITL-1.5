@@ -105,6 +105,15 @@
                 <section class="modal-card-body mx-2" style="background-color: #1C2833; color:white;">
                     <form v-on:submit.prevent="changepassword">
                         <div class="form-group">
+                            <label for="currentPassword">Confirm Current Password</label>
+                            <input type="password" id="currentPassword" class="form-control" v-model.trim.lazy="$v.currentPassword.$model" :class="{'is-invalid': validationStatusError($v.currentPassword), 'is-valid': !$v.currentPassword.$invalid }">
+                            <a @click="togglePassword3()"><span class="fa fa-fw fa-eye field-icon toggle-password"></span></a>
+                            <div class="invalid-feedback" style="margin-top:5px">
+                                <span v-if="!$v.currentPassword.required">กรุณากรอกยืนยันรหัสผ่านปัจจุบัน</span>
+                                <span v-else-if="!$v.currentPassword.minLength">Password ต้องไม่ต่ำกว่า 8 ตัว</span>
+                            </div> 
+                        </div>
+                        <div class="form-group">
                             <label for="Newpassword">Your New Password</label>
                             <input type="password" id="Newpassword" class="form-control" v-model.trim.lazy="$v.Newpassword.$model" :class="{'is-invalid': validationStatusError($v.Newpassword), 'is-valid': !$v.Newpassword.$invalid }">
                             <a @click="togglePassword1()"><span class="fa fa-fw fa-eye field-icon toggle-password"></span></a>
@@ -122,15 +131,6 @@
                             <div class="invalid-feedback" style="margin-top:5px">
                                 <span v-if="!$v.RepeatNewpassword.required">กรุณากรอกรหัสผ่านอีกครั้ง</span>
                                 <span v-else-if="!$v.RepeatNewpassword.sameAspassword">Password ไม่ตรงกัน</span>
-                            </div> 
-                        </div>
-                        <div class="form-group">
-                            <label for="currentPassword">Confirm Current Password</label>
-                            <input type="password" id="currentPassword" class="form-control" v-model.trim.lazy="$v.currentPassword.$model" :class="{'is-invalid': validationStatusError($v.currentPassword), 'is-valid': !$v.currentPassword.$invalid }">
-                            <a @click="togglePassword3()"><span class="fa fa-fw fa-eye field-icon toggle-password"></span></a>
-                            <div class="invalid-feedback" style="margin-top:5px">
-                                <span v-if="!$v.currentPassword.required">กรุณากรอกยืนยันรหัสผ่านปัจจุบัน</span>
-                                <span v-else-if="!$v.currentPassword.minLength">Password ต้องไม่ต่ำกว่า 8 ตัว</span>
                             </div> 
                         </div>
                         <div class="form-group" style="float:right; margin-top:5px; padding-right:20px;">
@@ -252,7 +252,6 @@ export default {
     },
     methods:{
         logout(){
-            this.id = ''
             Cookies.remove("tokenUser")
             Cookies.remove("tokenAdmin")
             this.$router.push({ name: "Home" });

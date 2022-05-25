@@ -213,7 +213,7 @@ export default {
     this.tokenUserError = Cookies.get("tokenUser");
     if (this.tokenAdmin) {
       this.permission = "for admin";
-    } else if (this.tokenUser) {
+    } else if (this.tokenUserError) {
       this.$swal({
         icon: "warning",
         title: "You can't access the admin, you are the user.! hahaha.",

@@ -330,25 +330,6 @@ export default {
           })
       }
     },
-    // ไม่ได้ใช้เอาไว้ดู
-    computed: {
-        findMin: function(){
-          if(Math.floor(this.sec/60) < 10){
-             return '0' + Math.floor(this.sec/60)
-          }
-          else{
-            return Math.floor(this.sec/60)
-          }
-        },
-        findSec: function(){
-          if(this.sec % 60 < 10){
-            return '0' + this.sec % 60
-          }
-          else{
-            return this.sec % 60
-        }
-      }
-    } 
 }
 </script>
     
