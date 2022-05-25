@@ -591,20 +591,11 @@ export default {
       permission: null,
       tokenAdmin: null,
       tokenUserError: null,
-      id: "",
-      acc_id: "",
-      manage_acc: null,
-      manage_standand: null,
       allforum: [],
       forum_id: "",
       forum_topic: "",
       forum_description: "",
       forum_type: "",
-      education_select: false,
-      part_time_select: false,
-      environment_select: false,
-      register_select: false,
-      scholarship_select: false,
       image_address: "",
       typeselect: null,
     };
@@ -640,7 +631,7 @@ export default {
     this.tokenUserError = Cookies.get("tokenUser");
     if (this.tokenAdmin) {
       this.permission = "for admin";
-    } else if (this.tokenUser) {
+    } else if (this.tokenUserError) {
       this.$swal({
         icon: "warning",
         title: "You can't access the admin, you are the user.! hahaha.",
@@ -660,8 +651,9 @@ export default {
   },
   methods: {
     logout() {
-      this.id = "";
       console.log("Log out!");
+      Cookies.remove("tokenUser")
+      Cookies.remove("tokenAdmin")
       this.$router.push({ name: "Home" });
     },
     gotopicture: function(url, topic) {

@@ -5,18 +5,21 @@
             <a :href="`${permissionPath}`"><img src="/image/navbar/newlogo.png" width="110px" height="auto" style="padding-left: 20px;" alt=""></a>
             <ul>
                 <div id="MyClockDisplay" class="clock"></div>
-                <li id="comp1" v-if="manage_acc == 1"><a href="/manageUser">Manage User</a></li>
-                <li id="comp1" v-if="manage_standand == 1"><a href="/manageforum">Manage Forum</a></li>
-                <li id="comp1" v-if="manage_standand == 1"><a href="/manageReport">Manage Report</a></li>
-                <template v-if="!currentUser">
+                <li id="comp1" v-if="currentAdmin"><a href="/manageUser">Manage User</a></li>
+                <li id="comp1" v-if="currentAdmin"><a href="/manageforum">Manage Forum</a></li>
+                <li id="comp1" v-if="currentAdmin"><a href="/manageReport">Manage Report</a></li>
+                <template v-if="!currentUser && !currentAdmin">
                 <li id="comp2"><a href="/login">Log In</a></li>
                 <div class="line"></div>
                 <li id="comp2"><a href="/register">Register</a></li>
                 </template>
-                <div class="dropdown" v-if="currentUser">
+                <div class="dropdown" v-if="currentUser || currentAdmin">
                 <a :href="`${permissionPath}`" style="text-decoration: none;" v-show="role == 'User'"><button type="button" class="home btn btn-outline-light">Home</button></a>
-                <button class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i :class="{'fa fa-user-plus': role == 'Admin', 'fa fa-user': role == 'User'}"></i> {{currentUser.studentid}}
+                <button v-if="currentUser" class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class='fa fa-user'></i> {{currentUser.studentid}}
+                </button>
+                <button v-if="currentAdmin" class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                    <i class='fa fa-user-plus'></i> {{currentAdmin.name}}
                 </button>
                 <p class="dropdown-menu" >
                     <button class="dropdown-item text-danger" type="button" @click="logout()">ออกจากระบบ</button>
@@ -51,7 +54,7 @@
 
 <script>
 import Cookies from "js-cookie"
-import { FORUMS_PAGE_QUERY, CURRENT_USER_QUERY } from '../graphql'
+import { FORUMS_PAGE_QUERY, CURRENT_USER_QUERY, CURRENT_ADMIN_QUERY } from '../graphql'
 
     export default {
     data() {
@@ -60,8 +63,7 @@ import { FORUMS_PAGE_QUERY, CURRENT_USER_QUERY } from '../graphql'
             tokenAdmin: null,
             role: null,
             currentUser: null,
-            manage_acc: null,
-            manage_standand: null,
+            currentAdmin: null,
             permissionPath: null,
             Forums: null,
             backPath: null
@@ -70,6 +72,9 @@ import { FORUMS_PAGE_QUERY, CURRENT_USER_QUERY } from '../graphql'
     apollo: {
         currentUser: {
             query: CURRENT_USER_QUERY
+        },
+        currentAdmin: {
+            query: CURRENT_ADMIN_QUERY
         },
         Forums: {
             query: FORUMS_PAGE_QUERY,
@@ -100,7 +105,6 @@ import { FORUMS_PAGE_QUERY, CURRENT_USER_QUERY } from '../graphql'
   },
     methods:{
         logout(){
-            this.id = ''
             Cookies.remove("tokenUser")
             Cookies.remove("tokenAdmin")
             this.$router.push({ name: "Home" });

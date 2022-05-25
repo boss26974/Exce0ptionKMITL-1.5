@@ -209,8 +209,6 @@
 </template>
 
 <script>
-// import navbarLogin from '../components/navbarLoginReg.vue'
-// import { required, email } from 'vuelidate/lib/validators'
 import {
   required,
   email,
@@ -277,78 +275,6 @@ export default {
     password_reset() {
       this.passwordError = "";
     },
-    // login() {
-    //   this.br = "";
-    //   this.$v.$touch();
-    //   if (this.$v.$pendding || this.$v.$error) return;
-    //   axios.post("http://localhost:5000/checkingLogin", {
-    //         email: this.email,
-    //         password: this.password,
-    //     })
-    //     .then((response) => {
-
-    //       var data = response.data;
-    //       this.emailError = data.errorEmail;
-    //       this.passwordError = data.errorPassword;
-
-    //       const data_remember = {
-    //         rememberEmail: this.email,
-    //         rememberPassword: this.password,
-    //         rememberTrue: this.remember
-    //       }
-    //       console.log(response);
-
-    //       if (data.message == "log in success!") {
-    //         if(this.remember == true){
-    //           let remember_json = JSON.stringify(data_remember)
-    //           localStorage.setItem('rememberMe', remember_json)
-    //         }
-    //         if(this.remember == false){
-    //           localStorage.removeItem('rememberMe')
-    //         }
-    //         if (data.role == 'Admin'){
-    //           this.$swal({
-    //             title: 'Your Access Key!',
-    //             input: 'password',
-    //             showConfirmButton: true,
-    //             showCancelButton: true,
-    //           }).then((result) => {
-    //             if (result.isConfirmed) {
-    //               axios.get("http://localhost:5000/accesskey/"+ result.value +"/"+ data.acc_id)
-    //               .then((response) => {
-    //                 if(response.data.message == "pass"){
-    //                   // set locatstorage
-    //                   const token = JSON.stringify(data.token);
-    //                   localStorage.setItem("tokenAdmin", token);
-    //                   this.$router.push({ name: "Admin" });
-    //                 }
-    //                 else{
-    //                   this.$swal({
-    //                     icon: 'warning',
-    //                     title: 'Your access key is not correct!',
-    //                     showConfirmButton: false,
-    //                     timer: 1500,
-    //                   })
-    //                 }
-    //                 console.log(response)
-    //               }).catch((err) => {
-    //                 console.log(err)
-    //               })
-    //             }
-    //           })
-    //         }
-    //         if (data.role == 'User'){
-    //           // set locatstorage
-    //           const token = JSON.stringify(data.token);
-    //           localStorage.setItem("tokenUser", token);
-    //           this.$router.push({ name: "User" });
-    //         }
-    //       }
-    //     })
-    //     .catch((error) => {
-    //       console.log(error);
-    //     });
-    // },
       login() {
         this.br = "";
         this.$v.$touch();

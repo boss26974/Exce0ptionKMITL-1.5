@@ -5,18 +5,21 @@
                 <a :href="`${permissionPath}`"><img src="/image/navbar/newlogo.png" width="110px" height="auto" style="padding-left: 20px;" alt=""></a>
                 <ul>
                     <div id="MyClockDisplay" class="clock"></div>
-                    <li id="comp1" v-if="manage_acc == 1"><a href="/manageUser">Manage User</a></li>
-                    <li id="comp1" v-if="manage_standand == 1"><a href="/manageforum">Manage Forum</a></li>
-                    <li id="comp1" v-if="manage_standand == 1"><a href="/manageReport">Manage Report</a></li>
-                    <template v-if="!currentUser">
+                    <li id="comp1" v-if="currentAdmin"><a href="/manageUser">Manage User</a></li>
+                    <li id="comp1" v-if="currentAdmin"><a href="/manageforum">Manage Forum</a></li>
+                    <li id="comp1" v-if="currentAdmin"><a href="/manageReport">Manage Report</a></li>
+                    <template v-if="!currentUser && !currentAdmin">
                         <li id="comp2"><a href="/login">Log In</a></li>
                         <div class="line"></div>
                         <li id="comp2"><a href="/register">Register</a></li>
                     </template>
-                    <div class="dropdown" v-if="currentUser">
+                    <div class="dropdown" v-if="currentUser || currentAdmin">
                         <a :href="`${permissionPath}`" style="text-decoration: none;" v-show="role == 'User'"><button type="button" class="home btn btn-outline-light">Home</button></a>
-                        <button class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i :class="{'fa fa-user-plus': role == 'Admin', 'fa fa-user': role == 'User'}"></i> {{currentUser.studentid}}
+                        <button v-if="currentUser" class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class='fa fa-user'></i> {{currentUser.studentid}}
+                        </button>
+                        <button v-if="currentAdmin" class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <i class='fa fa-user-plus'></i> {{currentAdmin.name}}
                         </button>
                         <p class="dropdown-menu" >
                             <button class="dropdown-item text-danger" type="button" @click="logout()">ออกจากระบบ</button>
@@ -31,7 +34,7 @@
                 <div class="offset-3 col-6" id="select_by_type">
                     <p id="select_title">เลือกหมวดหมู่ร้องเรียน</p>
                     <select id="type_select" class="form-control" v-model="type_select">
-                        <option value="" disabled selected>โปรดเลือกหมวดหมู่</option>
+                        <option value="all">ทุกหมวดหมู่</option>
                         <option value="sociality">สภาพสังคม</option>
                         <option value="studying">การศึกษา</option>
                         <option value="scholarship">ทุนการศึกษา</option>
@@ -42,12 +45,12 @@
                         <input class="form-check-input" type="checkbox" v-model="onlyself_check" id="self-checkbox">
                         <label class="form-check-label" for="self-checkbox">แสดงเฉพาะคำร้องเรียนของคุณ</label>
                     </div>
-                    <button id="select_button" class='btn' @click="type_report()">ตรวจสอบ</button>
-                    <p id="error_massage">{{errortype}}</p>
+                    <button id="select_button" class='btn' @click="getreportform()">ตรวจสอบ</button>
                 </div>
             </div>
         </div>
         <center><p id="tracking_big_title" style="font-size: 24px;">รวมเรื่องร้องเรียน{{title}}</p></center>
+        <center><p id="tracking_big_title" style="font-size: 24px;">ผลการค้นหา : {{Reports.length}}</p></center>
         <div id="all_select_tab" class="container-fluid">
             <section v-if="Reports.length != 0"><div class="row" v-for="reportform in Reports" :key="reportform._id" style="margin-bottom: 7%;">
                 <div class="col-5" id="reportform_description">
@@ -78,7 +81,6 @@
                     </div>
                 </div>
             </div></section>
-            <center v-if="Reports.length == 0"><p id="tracking_big_title" style="font-size: 24px;">ไม่มีเรื่องร้องเรียนที่ตรงกับที่คุณค้นหา</p></center>
         </div>
         <footer id="footer">
       <div class="row">
@@ -94,7 +96,7 @@
 </template>
 
 <script>
-import { CURRENT_USER_QUERY, REPORTS_FROM_TYPE_QUERY } from "../graphql"
+import { CURRENT_USER_QUERY, REPORTS_FROM_TYPE_QUERY, CURRENT_ADMIN_QUERY } from "../graphql"
 import Cookies from "js-cookie"
 export default {
         data() {
@@ -102,23 +104,22 @@ export default {
                 tokenUser: null,
                 tokenAdmin: null,
                 role: null,
-                manage_acc: null,
-                manage_standand: null,
                 permissionPath: null,
                 currentUser: null,
+                currentAdmin: null,
                 // trackingstatus
                 Reports: [],
-                type_select: null,
+                type_select: "all",
                 onlyself_check: false,
-                id_select: "",
                 title: "",
-                errortype: "",
-                errorid: ""
             }
         },
         apollo: {
         currentUser: {
             query: CURRENT_USER_QUERY
+        },
+        currentAdmin: {
+            query: CURRENT_ADMIN_QUERY
         },
         Reports: {
             query: REPORTS_FROM_TYPE_QUERY,
@@ -148,42 +149,54 @@ export default {
         },
         methods:{
             logout(){
-                this.id = ''
                 Cookies.remove("tokenUser")
                 Cookies.remove("tokenAdmin")
                 console.log('Log out!')
                 this.$router.push({ name: "Home" });
             },
-           type_report: function(){
-            if(this.type_select == null){
-                this.errortype = "กรุณาเลือกหมวดหมู่";
-            }
-            else{
-                this.reportform = this.getreportform(this.type_select);
-            }
-           },
-           getreportform: function(type){
-               if(!this.onlyself_check){
+           getreportform: function(){
+               let use_id = null
+
+               if(this.currentUser){
+                   use_id = this.currentUser._id
+               }
+               else if(this.currentAdmin){
+                   use_id = this.currentAdmin._id
+               }
+               
+               if(this.type_select == "all" && !this.onlyself_check){
+                   this.$apollo.queries.Reports.refetch()
+                   .then(() => {
+                       this.thaiTitle()
+                   })
+                }
+                else if(this.type_select == "all" && this.onlyself_check){
+                    this.$apollo.queries.Reports.refetch({
+                        filter: {
+                            complainer_id: use_id
+                        }
+                    })
+                   .then(() => {
+                       this.thaiTitle()
+                   })
+                }
+               else if(this.type_select != "all" && !this.onlyself_check){
                    this.$apollo.queries.Reports.refetch({
                     filter: {
-                        type: type
+                        type: this.type_select
                     }
-                    }).then((res) => {
-                        console.log(res)
+                    }).then(() => {
                         this.thaiTitle()
-                        this.errortype = ""
                     })
                }
-               else if(this.onlyself_check){
+               else if(this.type_select != "all" && this.onlyself_check){
                    this.$apollo.queries.Reports.refetch({
                     filter: {
-                        type: type,
-                        complainer_id: this.currentUser._id
+                        type: this.type_select,
+                        complainer_id: use_id
                     }
-                    }).then((res) => {
-                        console.log(res)
+                    }).then(() => {
                         this.thaiTitle()
-                        this.errortype = ""
                     })
                }
             },
