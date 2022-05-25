@@ -13,13 +13,13 @@
         /></a>
         <ul>
           <div id="MyClockDisplay" class="clock"></div>
-          <li id="comp1" v-if="manage_acc == 1">
+          <li id="comp1" v-if="currentAdmin.role_manage_admin_acc">
             <a href="/manageUser">Manage User</a>
           </li>
-          <li id="comp1" v-if="manage_standand == 1">
+          <li id="comp1" v-if="currentAdmin.role_manage_admin_acc">
             <a href="/manageforum">Manage Forum</a>
           </li>
-          <li id="comp1" v-if="manage_standand == 1">
+          <li id="comp1" v-if="currentAdmin.role_manage_admin_acc">
             <a href="/manageReport">Manage Report</a>
           </li>
           <div class="dropdown">
@@ -30,7 +30,7 @@
               data-bs-toggle="dropdown"
               aria-expanded="false"
             >
-              <i class="fa fa-user-plus"></i> {{ id }}
+              <i class="fa fa-user-plus"></i> {{ currentAdmin.name }}
             </button>
             <p class="dropdown-menu">
               <button
@@ -61,29 +61,24 @@
                 <th>#</th>
                 <th>Name</th>
                 <th>Email</th>
+                <th>Student ID</th>
                 <th>Date Created</th>
                 <th>Action</th>
               </tr>
             </thead>
             <tbody>
-              <tr v-for="user in users" :key="user.acc_id">
-                <td>{{ user.acc_id }}</td>
+              <tr v-for="(user, index) in Users" :key="user._id">
+                <td>{{ index + 1 }}</td>
                 <td>
-                  {{ user.acc_fname + " " + user.acc_lname }}
+                  {{ user.fname + " " + user.lname }}
                 </td>
-                <td>{{ user.acc_email }}</td>
-                <td>{{ new Date(user.create_date) }}</td>
+                <td>{{ user.email }}</td>
+                <td>{{ user.studentid }}</td>
+                <td>{{ new Date(user.createdAt) }}</td>
                 <td>
                   <a
                     @click="
-                      edituser(
-                        user.acc_id,
-                        user.acc_fname,
-                        user.acc_lname,
-                        user.acc_email,
-                        user.rule_manage_acc,
-                        user.rule_standand_admin
-                      )
+                      edituser(user._id, user.fname, user.lname, user.email, user.studentid)
                     "
                     class="settings"
                     title="Settings"
@@ -91,9 +86,7 @@
                     ><i class="material-icons">&#xE8B8;</i></a
                   >
                   <a
-                    @click="
-                      deleteUser(user.acc_id, user.acc_fname, user.acc_lname)
-                    "
+                    @click="deleteUser(user._id, user.fname, user.lname)"
                     title="Delete"
                     data-toggle="tooltip"
                     ><i class="material-icons" style="color: red"
@@ -169,40 +162,8 @@
             <input type="email" v-model="selecteditemail" />
           </div>
           <div>
-            <label for="" style="padding-right: 10px"> MANAGE ACCOUNT : </label>
-            <button
-              v-show="rule_acc"
-              class="button is-success"
-              @click="rule_acc = !rule_acc"
-            >
-              Can
-            </button>
-            <button
-              v-show="!rule_acc"
-              class="button is-danger"
-              @click="rule_acc = !rule_acc"
-            >
-              Can't
-            </button>
-          </div>
-          <div>
-            <label for="" style="padding-right: 10px">
-              MANAGE FORUM & REPORT :
-            </label>
-            <button
-              v-show="rule_admin"
-              class="button is-success"
-              @click="rule_admin = !rule_admin"
-            >
-              Can
-            </button>
-            <button
-              v-show="!rule_admin"
-              class="button is-danger"
-              @click="rule_admin = !rule_admin"
-            >
-              Can't
-            </button>
+            <label for="" style="padding-right: 10px"> STUDENT ID : </label>
+            <input type="text" v-model="selecteditstudentid" />
           </div>
         </section>
         <footer class="modal-card-foot">
@@ -217,16 +178,16 @@
 </template>
 
 <script>
-import axios from "axios";
+import Cookies from "js-cookie";
+import { USER_ALL_QUERY, CURRENT_ADMIN_QUERY, DELETE_USER, EDIT_USER } from "../graphql";
+
 export default {
   data() {
     return {
       permission: null,
       tokenAdmin: null,
       tokenUserError: null,
-      id: '',
-      manage_acc: null,
-      manage_standand: null,
+      id: "",
       users: [],
       showdeleteModal: false,
       showEditModal: false,
@@ -236,69 +197,39 @@ export default {
       selecteditfname: null,
       selecteditlname: null,
       selecteditemail: null,
-      rule_acc: null,
-      rule_admin: null,
+      selecteditstudentid: null,
     };
   },
+  apollo: {
+    currentAdmin: {
+      query: CURRENT_ADMIN_QUERY,
+    },
+    Users: {
+      query: USER_ALL_QUERY,
+    },
+  },
   created() {
-    this.tokenAdmin = JSON.parse(localStorage.getItem('tokenAdmin'))
-    this.tokenUserError = JSON.parse(localStorage.getItem('tokenUser'))
-    if(this.tokenAdmin != null){
-        this.permission = 'for admin'
-        axios.post("http://localhost:5000/checkTokenLogin", {
-            role: 'Admin',
-            tokenAdmin: this.tokenAdmin
-        }).then((response) => {
-                if(response.data.message == 'You can pass! (Admin)'){
-                    this.id = response.data.id
-                    this.manage_acc = response.data.rule_manage_acc
-                    this.manage_standand = response.data.rule_standand_admin
-                }
-                else{
-                    this.$swal({
-                        icon: 'warning',
-                        title: 'Only Admin.',
-                        showConfirmButton: true,
-                    })
-                    this.$router.push({ name: "Home" });
-                }
-                console.log(response)
-        }).catch(() => {
-            this.$swal({
-                icon: 'warning',
-                title: 'Oops! Error Your token hahahaha.',
-                showConfirmButton: true,
-            })
-
-            this.$router.push({ name: "Home" });
-        })
-    }
-    else{
-        if(this.tokenUserError != null){
-            this.$swal({
-                icon: 'warning',
-                title: 'Only Admin.',
-                showConfirmButton: true,
-            })
-            this.$router.push({ name: "Home" });
-        }
-        else{
-            this.$swal({
-                icon: 'warning',
-                title: 'กรุณาล็อกอินก่อนเข้าใช้งาน (Only Admin)',
-                showConfirmButton: true,
-            })
-            this.$router.push({ name: "Home" });
-        }
-    }
-    axios
-      .get("http://localhost:5000/")
-      .then((response) => {
-        this.users = response.data;
-      })
-      .catch((err) => {
-        if (err) throw err;
+    this.tokenAdmin = Cookies.get("tokenAdmin");
+    this.tokenUserError = Cookies.get("tokenUser");
+    if (this.tokenAdmin) {
+      this.permission = "for admin";
+    } else if (this.tokenUser) {
+      this.$swal({
+        icon: "warning",
+        title: "You can't access the admin, you are the user.! hahaha.",
+        showConfirmButton: true,
       });
+      this.$router.push({ name: "User" });
+    } else {
+      this.$swal({
+        icon: "warning",
+        title: "กรุณาล็อกอินก่อนเข้าใช้งาน",
+        showConfirmButton: true,
+      });
+      Cookies.remove("tokenUser");
+      Cookies.remove("tokenAdmin");
+      this.$router.push({ name: "Home" });
+    }
   },
   methods: {
     logout() {
@@ -306,58 +237,35 @@ export default {
       console.log("Log out!");
       this.$router.push({ name: "Home" });
     },
-    edituser(id, firstname, lastname, email, rule_acc, rule_admin) {
+    edituser(id, firstname, lastname, email, studentid) {
       this.showEditModal = true;
       this.selecteditid = id;
       this.selecteditfname = firstname;
       this.selecteditlname = lastname;
       this.selecteditemail = email;
-      if (rule_acc) {
-        this.rule_acc = true;
-      } else {
-        this.rule_acc = false;
-      }
-      if (rule_admin) {
-        this.rule_admin = true;
-      } else {
-        this.rule_admin = false;
-      }
+      this.selecteditstudentid = studentid;
     },
     saveedit() {
       this.showEditModal = !this.showEditModal;
-      if (this.rule_acc) {
-        this.rule_acc = 1;
-      } else {
-        this.rule_acc = 0;
-      }
-      if (this.rule_admin) {
-        this.rule_admin = 1;
-      } else {
-        this.rule_admin = 0;
-      }
-      axios
-        .put("http://localhost:5000/saveEdit", {
-          acc_id: this.selecteditid,
-          acc_fname: this.selecteditfname,
-          acc_lname: this.selecteditlname,
-          acc_email: this.selecteditemail,
-          rule_manage_acc: this.rule_acc,
-          rule_standand_admin: this.rule_admin,
-        })
-        .then((res) => {
-          alert(res.data.message);
-          axios
-            .get("http://localhost:5000/")
-            .then((response) => {
-              this.users = response.data;
-            })
-            .catch((err) => {
-              if (err) throw err;
-            });
-        })
-        .catch((err) => {
-          if (err) throw err;
-        });
+      this.$apollo.mutate({
+        mutation: EDIT_USER,
+        variables: {
+          id: this.selecteditid,
+          data : {
+            fname: this.selecteditfname,
+            lname: this.selecteditlname,
+            email: this.selecteditemail,
+            studentid: this.selecteditstudentid
+          }
+        }
+      }).then((res) => {
+        console.log(res)
+        this.$apollo.queries.Users.refetch().then((res) => {
+            console.log(res);
+            this.showEditModal = false;
+          });
+      })
+      
     },
     deleteUser(id, firstname, lastname) {
       this.showdeleteModal = true;
@@ -365,21 +273,20 @@ export default {
       this.selectdelname = firstname + " " + lastname;
     },
     confirmdel() {
-      axios
-        .delete("http://localhost:5000/deleteUser/" + this.selectdelid)
-        .then((res) => {
-          // location.reload();
-          alert(res.data.message);
-          this.users = this.users.filter((x) => {
-            return x.acc_id != this.selectdelid;
-          });
-          this.selectdelid = null;
-          this.selectdelname = null;
+      this.$apollo
+        .mutate({
+          mutation: DELETE_USER,
+          variables: {
+            deleteId: this.selectdelid,
+          },
         })
-        .catch((err) => {
-          if (err) throw err;
+        .then((res) => {
+          console.log(res)
+          this.$apollo.queries.Users.refetch().then((res) => {
+            console.log(res);
+            this.showdeleteModal = false;
+          });
         });
-      this.showdeleteModal = !this.showdeleteModal;
     },
   },
 };
@@ -620,4 +527,3 @@ table.table .avatar {
   color: white;
 }
 </style>
-

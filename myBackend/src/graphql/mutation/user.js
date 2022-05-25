@@ -5,7 +5,7 @@ import { UserModel, UserTC } from "../../models/user";
 
 export const createUser = UserTC.mongooseResolvers.createOne() //register
 export const updateUser = UserTC.mongooseResolvers.updateById()
-// export const removeUser = UserTC.mongooseResolvers.removeById()
+export const removeUser = UserTC.mongooseResolvers.removeById()
 
 
 //user+admin Login
@@ -104,3 +104,4 @@ export const changePassword = schemaComposer.createResolver({
         }
     }
 })
+

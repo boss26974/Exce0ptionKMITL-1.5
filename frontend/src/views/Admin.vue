@@ -6,12 +6,12 @@
                 <a href="/admin"><img src="/image/navbar/newlogo.png" width="110px" height="auto" style="padding-left: 20px;" alt=""></a>
                 <ul>
                     <div id="MyClockDisplay" class="clock"></div>
-                    <li id="comp1" v-if="manage_acc == 1"><a href="/manageUser">Manage User</a></li>
-                    <li id="comp1" v-if="manage_standand == 1"><a href="/manageforum">Manage Forum</a></li>
-                    <li id="comp1" v-if="manage_standand == 1"><a href="/manageReport">Manage Report</a></li>
+                    <li id="comp1" v-if="currentAdmin.role_manage_admin_acc"><a href="/manageUser">Manage User</a></li>
+                    <li id="comp1" v-if="currentAdmin.role_manage_admin_acc"><a href="/manageforum">Manage Forum</a></li>
+                    <li id="comp1" v-if="currentAdmin.role_manage_admin_acc"><a href="/manageReport">Manage Report</a></li>
                     <div class="dropdown">
                         <button class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <i class="fa fa-user-plus"></i> {{id}}
+                            <i class="fa fa-user-plus"></i> {{currentAdmin.name}}
                         </button>
                         <p class="dropdown-menu" >
                             <button class="dropdown-item text-danger" type="button" @click="modal_changepassword = true;">เปลี่ยนรหัสผ่าน</button>
@@ -311,6 +311,8 @@
 <script>
 import { required,  maxLength, minLength, sameAs } from 'vuelidate/lib/validators';
 import axios from 'axios';
+import Cookies from "js-cookie"
+import { CURRENT_ADMIN_QUERY } from "../graphql"
 
 function complexPassword(value) {
   if (!(value.match(/[a-z]/) && value.match(/[A-Z]/) && value.match(/[0-9]/))) {
@@ -327,13 +329,16 @@ export default {
             tokenUserError: null,
             id: '',
             acc_id: null,
-            manage_acc: null,
-            manage_standand: null,
             // change password
             modal_changepassword: false,
             Newpassword: '',
             RepeatNewpassword: '',
             currentPassword: '',
+        }
+    },
+    apollo: {
+        currentAdmin: {
+            query: CURRENT_ADMIN_QUERY
         }
     },
     validations:{
@@ -353,56 +358,28 @@ export default {
         }
     },
     created(){
-        this.tokenAdmin = JSON.parse(localStorage.getItem('tokenAdmin'))
-        this.tokenUserError = JSON.parse(localStorage.getItem('tokenUser'))
-        if(this.tokenAdmin != null){
-            this.permission = 'for admin'
-            axios.post("http://localhost:5000/checkTokenLogin", {
-                role: 'Admin',
-                tokenAdmin: this.tokenAdmin
-            }).then((response => {
-                    if(response.data.message == 'You can pass! (Admin)'){
-                        this.id = response.data.id
-                        this.acc_id = response.data.acc_id
-                        this.manage_acc = response.data.rule_manage_acc
-                        this.manage_standand = response.data.rule_standand_admin
-                    }
-                    else{
-                        this.$swal({
-                            icon: 'warning',
-                            title: "You can't access the admin, you are the user.! hahaha.",
-                            showConfirmButton: true,
-                        })
-                        this.$router.push({ name: "Home" });
-                    }
-                    console.log(response)
-            })).catch((err) => {
-                this.$swal({
-                    icon: 'warning',
-                    title: "Oops! Error Your token hahahaha.",
-                    showConfirmButton: true,
-                })
-                this.$router.push({ name: "Home" });
-                console.log(err)
+        this.tokenAdmin = Cookies.get("tokenAdmin")
+        this.tokenUserError = Cookies.get("tokenUser")
+        if(this.tokenAdmin) {
+            this.permission = "for admin"
+        }
+        else if(this.tokenUser) {
+            this.$swal({
+                icon: 'warning',
+                title: "You can't access the admin, you are the user.! hahaha.",
+                showConfirmButton: true,
             })
+            this.$router.push({ name: "User" });
         }
         else{
-            if(this.tokenUserError != null){
-                this.$swal({
-                    icon: 'warning',
-                    title: "You can't access the admin, you are the user.! hahaha.",
-                    showConfirmButton: true,
-                })
-                this.$router.push({ name: "Home" });
-            }
-            else{
-                this.$swal({
-                    icon: 'warning',
-                    title: 'กรุณาล็อกอินก่อนเข้าใช้งาน',
-                    showConfirmButton: true,
-                })
-                this.$router.push({ name: "Home" });
-            }
+            this.$swal({
+                icon: 'warning',
+                title: "กรุณาล็อกอินก่อนเข้าใช้งาน",
+                showConfirmButton: true,
+            })
+            Cookies.remove("tokenUser")
+            Cookies.remove("tokenAdmin")
+            this.$router.push({ name: "Home" });
         }
     },
     methods:{
