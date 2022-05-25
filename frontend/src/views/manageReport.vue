@@ -53,25 +53,23 @@
                         <table class="table table-bordered table-fixed table-hover">
                             <thead class="thead-dark" style="text-align:center;">
                                 <th scope="col" class="col-md-1">ID</th>
-                                <th scope="col" class="col-md-2">Date</th>
-                                <th scope="col" class="col-md-2">ประเภทเรื่องร้องเรียน</th>
+                                <th scope="col" class="col-md-3">Date</th>
+                                <th scope="col" class="col-md-3">ประเภทเรื่องร้องเรียน</th>
                                 <th scope="col" class="col-md-4">Title</th>
-                                <th scope="col" class="col-md-2">User Student ID</th>
                                 <th scope="col" class="col-md-1">Action</th>
                             </thead>
                             <tbody>
-                                <tr v-for='report in report_form_all' :key="report.report_form_id" :class="{'table-primary': report.status == 0, 'table-warning': report.status == 1, 'table-info': report.status == 2, 'table-success': report.status == 3, 'table-danger': report.status == 4}">
-                                    <td style="height: 70px; padding: 20px 0px 20px 30px;" scope="col" class="col-md-1">{{report.report_form_id}}</td>
-                                    <td style="height: 70px; padding: 10px 0px 20px 10px;" scope="col" class="col-md-2">{{report.report_form_date_time}}</td>
-                                    <td style="height: 70px; padding: 10px 0px 20px 10px;" scope="col" class="col-md-2">{{report.type}}</td>
-                                    <td style="height: 70px; padding: 10px 0px 20px 10px;" scope="col" class="col-md-4" v-html="report.report_form_topic"></td>
-                                    <td style="height: 70px; padding: 20px 0px 20px 30px;" scope="col" class="col-md-2">{{report.user_studentid}}</td>
+                                <tr v-for='(report, index) in Reports' :key="report._id" :class="{'table-primary': report.submission_status == 'Received', 'table-warning': report.submission_status == 'In_Progress', 'table-info': report.submission_status == 'Accepted', 'table-success': report.submission_status == 'Completed', 'table-danger': report.submission_status == 'Declined'}">
+                                    <td style="height: 70px; padding: 20px 0px 20px 30px;" scope="col" class="col-md-1">{{index + 1}}</td>
+                                    <td style="height: 70px; padding: 10px 0px 20px 10px;" scope="col" class="col-md-3">{{report.createdAt}}</td>
+                                    <td style="height: 70px; padding: 10px 0px 20px 10px;" scope="col" class="col-md-3">{{report.type}}</td>
+                                    <td style="height: 70px; padding: 10px 0px 20px 10px;" scope="col" class="col-md-4" v-html="report.topic"></td>
                                     <td style="height: 70px; padding: 20px 0px 20px 10px;" scope="col" id="td_action" class="col-md-1">
-                                        <a v-show="report.status != 3 && report.status != 4" @click="check_nextStatus(report.report_form_id, report.status)"><i class="fas fa-caret-square-right" style="color:blue; font-size:20px; margin: 0px 15px 0px 5px"></i></a>
-                                        <a v-show="report.status != 3 && report.status != 4" @click="check_Notpass(report.report_form_id, report.status)"><i class="fas fa-ban" style="color:red; font-size:20px;"></i></a>
-                                        <a v-show="report.status == 3" @click="show_detail(report.report_form_id, report.type)"><i class="fas fa-search" style="color:blue; font-size:20px; margin: 0px 15px 0px 5px"></i></a>
-                                        <a v-show="report.status == 4" @click="check_nextStatus(report.report_form_id, report.status)"><i class="fas fa-undo" style="color:blue; font-size:20px; margin: 0px 15px 0px 5px"></i></a>
-                                        <a v-show="report.status == 3 || report.status == 4" @click="check_delete(report.report_form_id, report.status)"><i class="fas fa-times-circle" style="color:red; font-size:20px;"></i></a>
+                                        <a v-show="report.submission_status != 'Completed' && report.submission_status != 'Declined'" @click="check_nextStatus(report._id, report.submission_status)"><i class="fas fa-caret-square-right" style="color:blue; font-size:20px; margin: 0px 15px 0px 5px"></i></a>
+                                        <a v-show="report.submission_status != 'Completed' && report.submission_status != 'Declined'" @click="check_Notpass(report._id, report.submission_status)"><i class="fas fa-ban" style="color:red; font-size:20px;"></i></a>
+                                        <a v-show="report.submission_status == 'Completed'" @click="show_detail(report._id, report.type)"><i class="fas fa-search" style="color:blue; font-size:20px; margin: 0px 15px 0px 5px"></i></a>
+                                        <a v-show="report.submission_status == 'Declined'" @click="check_nextStatus(report._id, report.submission_status)"><i class="fas fa-undo" style="color:blue; font-size:20px; margin: 0px 15px 0px 5px"></i></a>
+                                        <a v-show="report.submission_status == 'Completed' || report.submission_status == 'Declined'" @click="check_delete(report.report_form_id, report.submission_status)"><i class="fas fa-times-circle" style="color:red; font-size:20px;"></i></a>
                                     </td>
                                 </tr>
                             </tbody>
@@ -334,7 +332,7 @@
 <script>
 import axios from "axios";
 import Cookies from "js-cookie"
-import { CURRENT_ADMIN_QUERY, CURRENT_USER_QUERY } from "../graphql"
+import { CURRENT_ADMIN_QUERY, CURRENT_USER_QUERY, REPORTS_FROM_TYPE_QUERY } from "../graphql"
 export default {
     data() {
         return {
@@ -343,6 +341,7 @@ export default {
             tokenUserError: null,
             currentAdmin: null,
             currentUser: null,
+            Reports: null,
             // start
             data: null,
             report_form_all: [],
@@ -432,6 +431,9 @@ export default {
         },
         currentUser: {
             query: CURRENT_USER_QUERY
+        },
+        Reports: {
+            query: REPORTS_FROM_TYPE_QUERY
         }
     },
   created() {
@@ -459,8 +461,9 @@ export default {
   },
     methods: {
         logout() {
-        this.id = "";
         console.log("Log out!");
+        Cookies.remove("tokenAdmin")
+        Cookies.remove("tokenUser")
         this.$router.push({ name: "Home" });
         },
         reset_checkbox(){

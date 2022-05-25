@@ -60,6 +60,7 @@ export const REPORTS_FROM_TYPE_QUERY = gql`
       type
       description
       submission_status
+      createdAt
     }
   }
 `;
