@@ -7,6 +7,8 @@ export const createUser = UserTC.mongooseResolvers.createOne() //register
 export const updateUser = UserTC.mongooseResolvers.updateById()
 // export const removeUser = UserTC.mongooseResolvers.removeById()
 
+
+//user+admin Login
 const LoginPayloadOTC = schemaComposer.createObjectTC({
     name: 'LoginPayload',
     fields: {
@@ -58,6 +60,7 @@ export const login = schemaComposer.createResolver({
     },
 })
 
+//user+admin ChangePassword
 const ChangePasswordPayloadOTC = schemaComposer.createObjectTC({
     name: 'ChangePasswordPayload',
     fields: {
@@ -78,11 +81,25 @@ export const changePassword = schemaComposer.createResolver({
     resolve: async ({ args }) => {
         const { _id, old_password, new_password } = args
         const user = await UserModel.findById(_id)
-        const validPassword = await user.verifyPassword(old_password)
+        const admin = await AdminModel.findById(_id)
+        let validPassword = null
+        if (user) {
+            validPassword = await user.verifyPassword(old_password)
+        }
+        else if (admin) {
+            validPassword = await admin.verifyPassword(old_password)
+        }
+
         if (validPassword) {
-            await UserModel.updateOne({ _id: _id }, { password: new_password })
+            if (user) {
+                await UserModel.updateOne({ _id: _id }, { password: new_password })
+            }
+            else if (admin) {
+                await AdminModel.updateOne({ _id: _id }, { password: new_password })
+            }
             return { status: "Success", "message": "Password Updated!" }
-        } else {
+        }
+        else {
             return { status: "Failed", "message": "Old Password Incorrect." }
         }
     }
