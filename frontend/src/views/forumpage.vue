@@ -8,15 +8,15 @@
                 <li id="comp1" v-if="manage_acc == 1"><a href="/manageUser">Manage User</a></li>
                 <li id="comp1" v-if="manage_standand == 1"><a href="/manageforum">Manage Forum</a></li>
                 <li id="comp1" v-if="manage_standand == 1"><a href="/manageReport">Manage Report</a></li>
-                <template v-if="id ==''">
+                <template v-if="!currentUser">
                 <li id="comp2"><a href="/login">Log In</a></li>
                 <div class="line"></div>
                 <li id="comp2"><a href="/register">Register</a></li>
                 </template>
-                <div class="dropdown" v-if="id !=''">
+                <div class="dropdown" v-if="currentUser">
                 <a :href="`${permissionPath}`" style="text-decoration: none;" v-show="role == 'User'"><button type="button" class="home btn btn-outline-light">Home</button></a>
                 <button class="btn btn-danger  dropdown-toggle" id="comp3" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                    <i :class="{'fa fa-user-plus': role == 'Admin', 'fa fa-user': role == 'User'}"></i> {{id}}
+                    <i :class="{'fa fa-user-plus': role == 'Admin', 'fa fa-user': role == 'User'}"></i> {{currentUser.studentid}}
                 </button>
                 <p class="dropdown-menu" >
                     <button class="dropdown-item text-danger" type="button" @click="logout()">ออกจากระบบ</button>
@@ -25,20 +25,22 @@
             </ul>
         </div>
         </div>
-        <div class="container-fluid" id="all_arc">
+        <div class="container-fluid" id="all_arc" v-for="forum in Forums" :key="forum._id">
             <div class="row">
                 <div class="col-12">
-                    <p id="arc_title">{{arc.forum_topic}}</p>
-                    <i id="arc_date">Date: {{arc.forum_release_date}}</i>
-                    <center><img id="arc_image" :src="arc.image_address"></center>
-                    <p id="arc_description">{{arc.forum_description}}</p>
-                    <a href="/forum" id="back_to_forum">กลับไปยังหน้าข่าวประชาสัมพันธ์</a>
+                    <p id="arc_title">{{forum.topic}}</p>
+                    <i id="arc_date">Date: {{changeDate(forum.createdAt)}}</i>
+                    <center><img id="arc_image" :src="forum.image_path"></center>
+                    <p id="arc_description">{{forum.description}}</p>
+                    <a v-if="backPath == '/forum'" href="/forum" id="back_to_forum">กลับไปยังหน้าข่าวประชาสัมพันธ์</a>
+                    <a v-if="backPath == '/user'" href="/user" id="back_to_forum">กลับไปยังหน้าแรก</a>
+                    <a v-if="backPath == '/admin'" href="/admin" id="back_to_forum">กลับไปยังหน้าแรก</a>
+                    <a v-if="backPath == '/'" href="/" id="back_to_forum">กลับไปยังหน้าแรก</a>
                 </div>
             </div>
         </div>
         <footer>
         <div id="footer_homepage">
-            <a id="footer_button" class="btn" href="/help" v-show="id != ''">HELP</a>
             <p id="address">King Mongkut's Institute of Technology Ladkrabang</p>
             <p id="address">1 Chalong Krung 1 Alley, Lat Krabang, Bangkok 10520</p>
             <p id="address">02 723 4900</p>
@@ -48,7 +50,8 @@
 </template>
 
 <script>
-import axios from "axios";
+import Cookies from "js-cookie"
+import { FORUMS_PAGE_QUERY, CURRENT_USER_QUERY } from '../graphql'
 
     export default {
     data() {
@@ -56,55 +59,55 @@ import axios from "axios";
             tokenUser: null,
             tokenAdmin: null,
             role: null,
-            id: '',
+            currentUser: null,
             manage_acc: null,
             manage_standand: null,
             permissionPath: null,
-            arc: null
+            Forums: null,
+            backPath: null
         }
     },
-    created() {
-        this.tokenUser = JSON.parse(localStorage.getItem('tokenUser'))
-        this.tokenAdmin = JSON.parse(localStorage.getItem('tokenAdmin'))
-        if(this.tokenUser != null){this.role = 'User'}
-        if(this.tokenAdmin != null){this.role = 'Admin'}
-        if(this.tokenUser != null || this.tokenAdmin != null){
-            axios.post("http://localhost:5000/checkTokenLogin", {
-                role: this.role,
-                tokenUser: this.tokenUser,
-                tokenAdmin: this.tokenAdmin,
-            }).then((response => {
-                if(response.data.message == 'You can pass! (User)'){
-                    this.id = response.data.id
-                    this.permissionPath = '/user'
+    apollo: {
+        currentUser: {
+            query: CURRENT_USER_QUERY
+        },
+        Forums: {
+            query: FORUMS_PAGE_QUERY,
+            variables: {
+                filter: {
+                    _id: Cookies.get("forum_id")
                 }
-                if(response.data.message == 'You can pass! (Admin)'){
-                    this.id = response.data.id
-                    this.manage_acc = response.data.rule_manage_acc
-                    this.manage_standand = response.data.rule_standand_admin
-                    this.permissionPath = '/admin'
-                }
-            })).catch((err) => {
-                console.log(err)
-            })  
+            }
         }
-        else{
-            this.permissionPath = '/'
-        }
-        axios.get("http://localhost:5000/forum/" + localStorage.getItem("forum_id"))
-        .then((response) => {
-            this.arc = response.data[0];
-            console.log(response.data[0].forum_description);
-            console.log("success");
-        }).catch((err) => {
-            this.arc = err;
-        })
     },
+  created(){
+          this.tokenUser = Cookies.get('tokenUser')
+          this.backPath = Cookies.get("page")
+          this.tokenAdmin = Cookies.get('tokenAdmin')
+          if(this.tokenUser) {
+              this.role = "User"
+              this.permissionPath = "/user"
+          }
+          else if(this.tokenAdmin) {
+              this.role = "Admin"
+              this.permissionPath = "/admin"
+          }
+          else{
+            this.permissionPath = "/"
+            Cookies.remove("tokenUser")
+            Cookies.remove("tokenAdmin")
+        }
+  },
     methods:{
         logout(){
             this.id = ''
+            Cookies.remove("tokenUser")
+            Cookies.remove("tokenAdmin")
             this.$router.push({ name: "Home" });
         },
+        changeDate(date){
+            return new Date(date).toLocaleString("th-TH")
+        }
     }
 }
 </script>

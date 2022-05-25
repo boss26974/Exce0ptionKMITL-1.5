@@ -55,3 +55,28 @@ export const REPORTS_FROM_TYPE_QUERY = gql`
         }
     }
 `
+
+export const  FORUMS_QUERY = gql`
+    query Forums ($limit : Int) {
+        Forums (limit : $limit, sort : _ID_DESC) {
+            _id
+            topic
+            type
+            image_path
+        }
+    }
+`
+
+export const FORUMS_PAGE_QUERY = gql`
+    query Forums ($filter : FilterFindManyForumInput) {
+        Forums (filter : $filter, sort : _ID_DESC) {
+            _id
+            topic
+            type
+            description
+            image_path
+            author_id
+            createdAt
+        }
+    } 
+`

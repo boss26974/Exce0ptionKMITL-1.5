@@ -28,36 +28,33 @@
         <center><p id="tracking_big_title">ติดตามสถานะเรื่องร้องเรียน</p></center>
         <div id="all_select_tab" class="container-fluid">
             <div class="row">
-                <div class="col-5" id="select_by_type">
+                <div class="offset-3 col-6" id="select_by_type">
                     <p id="select_title">เลือกหมวดหมู่ร้องเรียน</p>
                     <select id="type_select" class="form-control" v-model="type_select">
                         <option value="" disabled selected>โปรดเลือกหมวดหมู่</option>
                         <option value="sociality">สภาพสังคม</option>
                         <option value="studying">การศึกษา</option>
                         <option value="scholarship">ทุนการศึกษา</option>
-                        <option value="register">การลงทะเบียนเรียน</option>
+                        <option value="register_system">การลงทะเบียนเรียน</option>
                         <option value="environment">สภาพแวดล้อม</option>
                     </select>
+                    <div class="form-check">
+                        <input class="form-check-input" type="checkbox" v-model="onlyself_check" id="self-checkbox">
+                        <label class="form-check-label" for="self-checkbox">แสดงเฉพาะคำร้องเรียนของคุณ</label>
+                    </div>
                     <button id="select_button" class='btn' @click="type_report()">ตรวจสอบ</button>
                     <p id="error_massage">{{errortype}}</p>
                 </div>
-                <div class="col-2"></div>
-                <div class="col-5" id="select_by_id">
-                    <center><p id="select_title">กรอกหมายเลขประจำเอกสาร</p></center>
-                    <input type="number" class="form-control" id="id_select" v-model="id_select" placeholder="กรอกหมายเลขประจำเอกสารเพื่อค้นหา">
-                    <button id="select_button" class='btn' @click="id_report()">ตรวจสอบ</button>
-                    <p id="error_massage">{{errorid}}</p>
-                </div>
             </div>
         </div>
-        <center><p id="tracking_big_title" style="font-size: 24px;" v-show="typescreen || id_screen">{{title}}</p></center>
+        <center><p id="tracking_big_title" style="font-size: 24px;">รวมเรื่องร้องเรียน{{title}}</p></center>
         <div id="all_select_tab" class="container-fluid">
-            <section  v-show="typescreen"><div class="row" v-for="reportform in Reports" :key="reportform._id" style="margin-bottom: 7%;">
+            <section v-if="Reports.length != 0"><div class="row" v-for="reportform in Reports" :key="reportform._id" style="margin-bottom: 7%;">
                 <div class="col-5" id="reportform_description">
                     <p>หัวข้อเรื่องร้องเรียน : {{reportform.topic}}</p>
                     <p>เนื้อหาเรื่องร้องเรียน : {{reportform.description}}</p>
-                    <p>สถานะ : {{reportform.submission_status}}</p>
-                    <p>ประเภทเรื่องร้องเรียน : {{reportform.type}}</p>
+                    <p>สถานะ : {{thaiStatus(reportform.submission_status)}}</p>
+                    <p>ประเภทเรื่องร้องเรียน : {{thaiType(reportform.type)}}</p>
                 </div>
                 <div class="col-7" id="reportform_bar">
                     <div class="row">
@@ -81,38 +78,7 @@
                     </div>
                 </div>
             </div></section>
-            <section  v-show="id_screen"><div class="row" v-for="reportform in Reports" :key="reportform._id" style="margin-bottom: 7%;">
-                <div class="col-12">
-                    {{reportform.topic}}
-                </div>
-                <div class="col-12">
-                    <div class="row" style="color: #ffffff">
-                        <div class="col-12" style="margin-bottom : 3%;">
-                            <div class="progress">
-                                <div class="progress-bar" role="progressbar" :style="tubestatus(reportform.submission_status)" aria-valuenow="25" aria-valuemin="0" aria-valuemax="100"></div>
-                            </div>
-                        </div>
-                        <div class="col-3" style="text-align: center">
-                            <i :style="{'opacity': statusfont(reportform.submission_status, 'Received').opa}">ระบบได้รับเรื่องแล้ว</i>
-                        </div>
-                        <div class="col-3" style="text-align: center">
-                            <i :style="{'opacity': statusfont(reportform.submission_status, 'In_Progress').opa}">ระบบกำลังตรวจสอบ</i>
-                        </div>
-                        <div class="col-3" style="text-align: center">
-                            <i :style="{'opacity': statusfont(reportform.submission_status, 'Accepted').opa}">{{extrafontstatus(reportform.status)}}</i>
-                        </div>
-                        <div class="col-3" style="text-align: center">
-                            <i :style="{'opacity': statusfont(reportform.submission_status, 'Completed').opa}">ระบบดำเนินการสำเร็จ</i>
-                        </div>
-                    </div>
-                    <div class="row">
-                        <p id="tracking_big_title" style="font-size : 24px; color : #ffffff;">หมวดหมู่ {{reportform.type}}</p>
-                        <div class="col-12">
-                            <p id="reportform_description_id">{{reportform.problem_description}}</p>
-                        </div>
-                    </div>
-                </div>
-            </div></section>
+            <center v-if="Reports.length == 0"><p id="tracking_big_title" style="font-size: 24px;">ไม่มีเรื่องร้องเรียนที่ตรงกับที่คุณค้นหา</p></center>
         </div>
         <footer id="footer">
       <div class="row">
@@ -128,7 +94,6 @@
 </template>
 
 <script>
-import axios from "axios";
 import { CURRENT_USER_QUERY, REPORTS_FROM_TYPE_QUERY } from "../graphql"
 import Cookies from "js-cookie"
 export default {
@@ -144,9 +109,8 @@ export default {
                 // trackingstatus
                 Reports: [],
                 type_select: null,
+                onlyself_check: false,
                 id_select: "",
-                typescreen: true,
-                id_screen: false,
                 title: "",
                 errortype: "",
                 errorid: ""
@@ -192,8 +156,6 @@ export default {
             },
            type_report: function(){
             if(this.type_select == null){
-                this.id_screen = false;
-                this.typescreen = true;
                 this.errortype = "กรุณาเลือกหมวดหมู่";
             }
             else{
@@ -201,55 +163,38 @@ export default {
             }
            },
            getreportform: function(type){
-               this.$apollo.queries.Reports.refetch({
+               if(!this.onlyself_check){
+                   this.$apollo.queries.Reports.refetch({
                     filter: {
                         type: type
                     }
-                }).then((res) => {
-                    console.log(res)
-                    this.errortype = ""
-                })
-                //    axios.get("http://localhost:5000/getreportform/type/" + type)
-                //    .then((response) => {
-                //        this.Reports = response.data.data;
-                //        this.id_screen = !response.data.status;
-                //        this.typescreen = response.data.status;
-                //        this.errortype = response.data.error;
-                //        this.title = "สถานะเรื่องร้องเรียน หมวดหมู่" + response.data.title;
-                //    }).catch((err) => {
-                //        console.log(err);
-                //    })
+                    }).then((res) => {
+                        console.log(res)
+                        this.thaiTitle()
+                        this.errortype = ""
+                    })
+               }
+               else if(this.onlyself_check){
+                   this.$apollo.queries.Reports.refetch({
+                    filter: {
+                        type: type,
+                        complainer_id: this.currentUser._id
+                    }
+                    }).then((res) => {
+                        console.log(res)
+                        this.thaiTitle()
+                        this.errortype = ""
+                    })
+               }
             },
-          id_report: function(){
-               if(this.id_select == ""){
-                    this.id_screen = false;
-                    this.typescreen = false;
-                    this.errorid = "กรุณากรอกหมายเลขประจำเอกสาร";
-               }
-               else{
-                    this.Reports = this.getreportform_id(this.id_select);
-               }
-           },
-           getreportform_id: function(id){
-               axios.get("http://localhost:5000/getreportform/searchbyid/" + id)
-                    .then((response) => {
-                    this.Reports = response.data.data;
-                    this.id_screen = response.data.status;
-                    this.typescreen = false;
-                    this.errorid = response.data.error;
-                    this.title = "สถานะเรื่องร้องเรียนของหมายเลข " + this.id_select;
-                }).catch((err) => {
-                    console.log(err);
-                })
-           },
            tubestatus: function(status){
                var backgroundcolor = "#ffffff";
-               var width = "37.5%";
+               var width = "0%";
                if(status == "Received"){
                    width = "0%";
                }
                else if(status == "In_Progress"){
-                   backgroundcolor = ""
+                   backgroundcolor = "#777777"
                    width = "37.5%";
                }
                else if(status == "Accepted"){
@@ -284,6 +229,59 @@ export default {
             extrafontstatus: function(status){
                 if(status == "Declined"){return "ระบบไม่สามารถดำเนินการได้"}
                 else{return "ระบบกำลังดำเนินการ"}
+            },
+            thaiStatus: function(status){
+                if(status == "Received"){
+                    status = "ได้รับเรื่องแล้ว"
+                }
+                else if(status  == "In_Progress"){
+                    status = "กำลังตรวจสอบ"
+                }
+                else if(status   == "Declined"){
+                    status  = "ไม่สามารถดำเนินการได้"
+                }
+                else if(status   == "Accepted"){
+                    status  = "กำลังดำเนินการ"
+                }
+                else if(status   == "Completed"){
+                    status  = "ดำเนินการสำเร็จ"
+                }
+                return status
+            },
+            thaiType: function(type){
+                if(type == "sociality"){
+                    type = "สภาพสังคม"
+                }
+                else if(type == "studying"){
+                    type = "การศึกษา"
+                }
+                else if(type  == "scholarship"){
+                    type  = "ทุนการศึกษา"
+                }
+                else if(type  == "register_system"){
+                    type  = "การลงทะเบียนเรียน"
+                }
+                else if(type  == "environment"){
+                    type  = "สภาพแวดล้อม"
+                }
+                return type
+            },
+            thaiTitle: function(){
+                if(this.type_select == "sociality"){
+                    this.title = "เกี่ยวกับสภาพสังคม"
+                }
+                if(this.type_select == "studying"){
+                    this.title = "เกี่ยวกับการศึกษา"
+                }
+                if(this.type_select == "scholarship"){
+                    this.title = "เกี่ยวกับทุนการศึกษา"
+                }
+                if(this.type_select == "register_system"){
+                    this.title = "เกี่ยวกับการลงทะเบียนเรียน"
+                }
+                if(this.type_select == "environment"){
+                    this.title = "เกี่ยวกับสภาพแวดล้อม"
+                }
             }
            }
         }
@@ -395,6 +393,7 @@ export default {
     }
     #select_button{
         background-color: #FFA07A;
+        margin-top: 4%;
         margin-bottom: 7%;
         border-radius: 30px;
         color: #1a1819;

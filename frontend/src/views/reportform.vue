@@ -80,7 +80,6 @@
     </div>
     <footer>
         <div id="footer_homepage">
-            <a id="footer_button" class="btn" href="/help">HELP</a>
             <p id="address">King Mongkut's Institute of Technology Ladkrabang</p>
             <p id="address">1 Chalong Krung 1 Alley, Lat Krabang, Bangkok 10520</p>
             <p id="address">02 723 4900</p>
