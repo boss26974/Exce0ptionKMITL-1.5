@@ -6,6 +6,11 @@ const ForumSchema = new Schema({
         type: String,
         required: true
     },
+    type: {
+        type: String,
+        enum: ['sociality', 'studying', 'scholarship', 'register_system', 'environment'],
+        required: true
+    },
     description: {
         type: String,
         required: true
