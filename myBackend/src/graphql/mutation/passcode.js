@@ -61,9 +61,13 @@ export const checkPasscode = schemaComposer.createResolver({
     resolve: async ({ args }) => {
         const { email, passcode } = args
         const ForgotUser = await UserModel.findOne({email: email})
+        if (!ForgotUser) { //ไม่เจอใน user
+            return { status: "Failed", message: "Email not found"}
+        }
+
         const UserPasscode = await PasscodeModel.findById(ForgotUser._id)
         if (UserPasscode) {
-            const validPassword = await UserPasscode.verifyPasscode(passcode) //bcrypt decrypt
+            const validPassword = await UserPasscode.verifyPasscode(passcode) //bcrypt compare
             if (!validPassword) {
                 return { status: "Failed", message: "Confirmation Code Incorrect" }
             }
@@ -71,8 +75,6 @@ export const checkPasscode = schemaComposer.createResolver({
 
         } else if (ForgotUser) { //หาใน user เจอ แต่หาใน passcode ไม่เจอ
             return { status: "Failed", message: "Passcode Expired"}
-        } else { //ไม่เจอใน user
-            return { status: "Failed", message: "Email not found"}
         }
     }
 })
