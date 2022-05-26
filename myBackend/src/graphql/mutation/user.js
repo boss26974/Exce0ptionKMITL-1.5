@@ -104,3 +104,24 @@ export const changePassword = schemaComposer.createResolver({
         }
     }
 })
+
+
+export const setNewPassword = schemaComposer.createResolver({
+    name: 'setNewPassword',
+    kind: 'mutation',
+    type: ChangePasswordPayloadOTC,
+    args: {
+        email: "String!",
+        password: "String!"
+    },
+    resolve: async ({ args }) => {
+        const { email , password } = args
+        const User = await UserModel.findOne({ email: email })
+        if (User) {
+            await UserModel.updateOne({ email: email }, { password: password})
+            return { status: "Success", message: "Password Updated!"}
+        } else {
+            return { status: "Failed", message: "Email not found"}
+        }
+    }
+})

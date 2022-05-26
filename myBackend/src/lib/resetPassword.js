@@ -42,10 +42,12 @@ export const sendResetEmail = async (userEmail) => {
             to: userEmail,
             subject: "[ExceptionKMITL] Password Reset Request",
             //text: "Hello world?", // plain text body
-            html: `<div style="width: 30%"><h2>Reset your password?</h2><hr />
+            html: `<div style="width: 40%"><h2>Reset your password?</h2><hr />
             If you requested a password reset for ${userEmail}, use the confirmation code below to complete the process.
-            If you didn't make this request, ignore this email.\n</div>
-            <b>${verifyCode}</b>
+            If you didn't make this request, ignore this email.</div>
+            <div style="margin-top: 30px">
+                <b>${verifyCode}</b>
+            </div>
             `
         });
 
