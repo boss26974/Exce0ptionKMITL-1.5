@@ -172,3 +172,29 @@ export const DELETE_FORUM = gql`
       }
   }
 `
+export const RESET_PASSWORD_MUTATION = gql`
+  mutation resetPassword($email : String!) {
+      resetPassword(email: $email) {
+        status
+        message
+      }
+  }
+`
+
+export const CHECK_PASSCODE_MUTATION = gql`
+  mutation checkPasscode($email : String!, $passcode : String!) {
+    checkPasscode(email: $email, passcode : $passcode) {
+      status
+      message
+    }
+  }
+`
+
+export const SET_NEW_PASSWORD_MUTATION = gql`
+  mutation setNewPassword($email : String!, $password : String!) {
+    setNewPassword(email: $email, password : $password) {
+      status
+      message
+    }
+  }
+`

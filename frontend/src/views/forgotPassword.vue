@@ -25,19 +25,19 @@
                 </div>
 
             <!-- send mail -->
-                <div class="alert alert-success alert-dismissible fade show" role="alert" style="" v-if="sendError1 == 'error'">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="" v-if="sendError1 == 'error'">
                           กรุณากรอก Email ก่อนกด SEND CODE
                       <button type="button" class="close" data-dismiss="alert" aria-label="Close" @click="sendError1 = ''">
                           <span aria-hidden="true">&times;</span>
                       </button>
                 </div>
-                <div class="alert alert-success alert-dismissible fade show" role="alert" style="" v-if="sendError2 == 'error'">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="" v-if="sendError2 == 'error'">
                           กรุณากรอกข้อมูลให้ครบถ้วนและถูกต้อง
                       <button type="button" class="close" data-dismiss="alert" aria-label="Close" @click="sendError2 = ''">
                           <span aria-hidden="true">&times;</span>
                       </button>
                 </div>
-                <div class="alert alert-success alert-dismissible fade show" role="alert" style="" v-if="notFoundEmail != ''">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="" v-if="notFoundEmail != ''">
                           {{notFoundEmail}}
                       <button type="button" class="close" data-dismiss="alert" aria-label="Close" @click="notFoundEmail = ''">
                           <span aria-hidden="true">&times;</span>
@@ -49,7 +49,7 @@
                           <span aria-hidden="true">&times;</span>
                       </button>
                 </div>
-                <div class="alert alert-success alert-dismissible fade show" role="alert" style="" v-if="error != ''">
+                <div class="alert alert-danger alert-dismissible fade show" role="alert" style="" v-if="error != ''">
                           {{error}}
                       <button type="button" class="close" data-dismiss="alert" aria-label="Close" @click="error = ''">
                           <span aria-hidden="true">&times;</span>
@@ -77,7 +77,7 @@
                         <span v-if="!$v.emailSend.email">Email ไม่ถูกต้อง</span>
                     </div>   
                   </div>
-                  <div class="form-group" style="margin-top:-15px">
+                  <div class="form-group" style="margin-top:-15px" v-if="passInputShow">
                     <input type="password" class="fadeIn second form-control" placeholder="Your new password" v-model.trim.lazy="$v.Newpassword.$model" :class="{'is-invalid': validationStatusError($v.Newpassword), 'is-valid': !$v.Newpassword.$invalid }" id="Newpassword1"> 
                     <a @click="togglePassword1()"><span class="fa fa-fw fa-eye field-icon2 toggle-password"></span></a>
                     <div class="invalid-feedback" style="text-align: left; margin-left:35px; margin-top:-5px">
@@ -87,7 +87,7 @@
                         <span v-else-if="!$v.Newpassword.complex">Password ง่ายเกินไป ควรมี A-Z หรือ a-z หรือ อักขระพิเศษ อย่างน้อย 1 ตัว</span>
                     </div>
                   </div>
-                  <div class="form-group" style="margin-top:-15px">
+                  <div class="form-group" style="margin-top:-15px" v-if="passInputShow">
                     <input type="password" class="fadeIn second form-control" placeholder="Repeat your new password" v-model.trim.lazy="$v.RepeatNewpassword.$model" :class="{'is-invalid': validationStatusError($v.RepeatNewpassword), 'is-valid': (Newpassword != '') ? !$v.RepeatNewpassword.$invalid : '' }" id="Newpassword2">
                     <a @click="togglePassword2()"><span class="fa fa-fw fa-eye field-icon2 toggle-password"></span></a>
                     <div class="invalid-feedback" style="text-align: left; margin-left:35px; margin-top:-5px">
@@ -97,28 +97,37 @@
                   </div>
                     <div class="container">
                       <div class="row">
-                          <div class="col-6">
+                        <div class="col-6">
                             <input type="text" placeholder="Your code" class="form-control" style="margin-top:10px; margin-left:10px" v-if="sending == ''" v-model.trim.lazy="$v.code.$model" :class="{'is-invalid': validationStatusError($v.code), 'is-valid': !$v.code.$invalid }">
                             <div class="invalid-feedback" style="text-align: left; margin-left:20px; margin-top:-5px">
                               <span v-if="!$v.code.required">กรุณากรอกรหัสยืนยัน</span>
-                              <span v-if="!$v.code.numeric">รหัสยืนยันเป็นตัวเลข</span>
                               <span v-if="!$v.code.maxLength"></span>
                               <span v-if="!$v.code.minLength"></span>
                             </div>
                             <div>
-                              <span v-if="sending == '' && timeOver != 'Yes'" style="color:yellow;">มีเวลา 3 นาทีในการกรอกโค้ด!</span>
-                              <span v-if="timeOver == 'Yes'" style="margin-right: 30px" class="text-success">หมดเวลา!!</span>
+                              <span v-if="sending == ''" style="color:yellow;">มีเวลา 5 นาทีในการกรอกโค้ด!</span>
                             </div>
+                        </div>
+                      </div>
+                      <div class="row">
+                          <div class="col-6">
                             <template v-if="sending != 'hide' && sending != ''">
-                              <button class="mt-3 mr-4 btn btn-primary" type="button" style="" disabled>
+                              <button class="mt-3 mr-4 btn btn-primary" type="button" style="margin-bottom:30px;" disabled>
                                 {{sending}}
                                 <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
                               </button>
                             </template>
-                            <input type="button" class="fadeIn fourth btn btn-danger" value="" style="margin-top:10px; margin-right:50px" v-model="sendcode" v-if="sendcode != 'hide'" @click="SendCode()">
+                            <input type="button" class="fadeIn second btn btn-danger" value="" style="margin-top:10px; margin-right:50px; margin-bottom:30px;" v-model="sendcode" v-if="sendcode != 'hide' || sending == ''" @click="SendCode()">
                           </div>
                           <div class="col-6">
-                            <input type="submit" class="fadeIn fourth" value="change password" style="margin-top:10px">
+                            <template v-if="change_sending">
+                              <input type="submit" class="fadeIn second" v-model="change_password" style="margin-top:10px" v-if="change_password" @click = "check_and_change()">
+                              <button class="mt-3 mr-4 btn btn-primary" type="button" style="margin-bottom:30px;" disabled>
+                                {{change_sending}}
+                                <span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span>
+                              </button>
+                            </template>
+                            <input type="button" class="fadeIn second btn btn-primary" v-model="change_password" style="margin-top:10px" v-if="change_password" @click = "check_and_change()">
                           </div>
                       </div>
                     </div>
@@ -148,8 +157,8 @@
 </template>
 
 <script>
-import { required,maxLength, minLength, sameAs, email, numeric } from 'vuelidate/lib/validators';
-import axios from 'axios';
+import { required,maxLength, minLength, sameAs, email} from 'vuelidate/lib/validators';
+import { RESET_PASSWORD_MUTATION, CHECK_PASSCODE_MUTATION, SET_NEW_PASSWORD_MUTATION } from "../graphql"
 
 function complexPassword(value) {
   if (!(value.match(/[a-z]/) && value.match(/[A-Z]/) && value.match(/[0-9]/))) {
@@ -172,6 +181,9 @@ export default {
             // sending....
             sendcode: 'Send code',
             sending: 'hide',
+            passInputShow: false,
+            change_password: null,
+            change_sending: null,
             // response
             sendError1: '',
             sendError2: '',
@@ -197,7 +209,6 @@ export default {
       },
       code:{
         required,
-        numeric,
         minLength: minLength(6),
         maxLength: maxLength(6)
       }
@@ -230,22 +241,6 @@ export default {
           this.RepeatNewpassword = ''
           this.code = ''
         },
-        timer(){
-          this.interval = setInterval(() => {
-            this.sec -= 1
-            if(this.sec <= 0){
-              clearInterval(this.interval)
-              this.timeOver = 'Yes'
-              setTimeout(() => {
-                this.timeOver = ''
-                this.sec = 181
-                this.sendcode = 'Send code'
-                this.sending = 'hide'
-                this.code = ''
-              }, 1000);
-            }
-          }, 1000);
-        },
         SendCode(){
             this.$v.emailSend.$touch();
             if( this.$v.emailSend.$pendding || this.$v.emailSend.$error ) return this.sendError1 = 'error',
@@ -261,20 +256,22 @@ export default {
                     this.sending = 'sending..'
                       setTimeout(() => {
                         this.sending = 'sending...'
-                        axios.post('http://localhost:5000/forgotpassword/sendmail', {
-                          email:{
-                              emailSend: this.emailSend
+                        this.$apollo.mutate({
+                          mutation: RESET_PASSWORD_MUTATION,
+                          variables: {
+                              email: this.emailSend
                           }
                         })
                         .then((response) => {
-                            this.data = response.data
+                            this.data = response.data.resetPassword
                             console.log(this.data)
-                            if(this.data.message == 'send success!')
+                            if(this.data.status == 'Success')
                             {
                               this.$v.code.$reset();
                               this.code = ''
                               this.sending = ''
-                              this.timer()
+                              this.change_password = "check passcode"
+                              this.sendcode = 'Send code'
                             }
                             else{
                               this.sending = 'hide'
@@ -288,47 +285,121 @@ export default {
                   }, 1000);
               }, 1000);
         },
-        ChangePassword(){
+        CheckPassCode(){
           this.$v.$touch();
-          if( this.$v.$pendding || this.$v.$error ) return this.sendError2 = 'error' ,
+          if( this.$v.code.$pendding || this.$v.code.$error ) return this.sendError2 = 'error' ,
             this.sendError1 = '',
             this.notFoundEmail = '',
             this.success = '',
             this.error = '';
-          axios.put("http://localhost:5000/forgotpassword/checking", {
-              emailSend: this.emailSend,
-              Newpassword: this.Newpassword,
-              RepeatNewpassword: this.RepeatNewpassword,
-              code: this.code,
-              codeCheck: this.data.code
-          }).then((response) => {
-            const data = response.data
-            console.log(data)
-            if(data.message == 'เปลี่ยนรหัสผ่านสำเร็จ'){
-              this.success = data.message
-              this.sendError1 = ''
-              this.sendError2 = ''
-              this.notFoundEmail = ''
-              this.error = ''
-              clearInterval(this.interval)
-              this.sec = 181
-              this.sendcode = 'Send code'
-              this.sending = 'hide'
-              this.code = ''
-              this.$v.$reset();
-              this.reset_data()
+            this.change_password = null
+            this.change_sending = "sending"
+            setTimeout(() => {
+              this.change_sending = "sending."
+              setTimeout(() => {
+                this.change_sending = "sending.."
+                setTimeout(() => {
+                    this.change_sending = "sending..."
+                    this.$apollo.mutate({
+                      mutation: CHECK_PASSCODE_MUTATION,
+                      variables: {
+                        email: this.emailSend,
+                        passcode: this.code
+                      }
+                      })
+                      .then((res) => {
+                        this.change_password = "change password"
+                        if(res.data.checkPasscode.status == "Success"){
+                            this.change_sending = null
+                            this.change_password = "change password"
+                            this.passInputShow = true
+                            this.sendError1 = ''
+                            this.sendError2 = ''
+                            this.notFoundEmail = ''
+                            this.success = ''
+                            this.$v.Newpassword.$reset();
+                            this.$v.RepeatNewpassword.$reset();
+                        }
+                        else{
+                            this.error = res.data.checkPasscode.message 
+                            this.sendError1 = ''
+                            this.sendError2 = ''
+                            this.notFoundEmail = ''
+                            this.success = ''
+                            this.change_sending = null
+                            this.change_password = "check passcode"
+                        }
+                      })
+                      .catch((err) => {
+                          console.log(err)
+                      })
+                }, 1000)
+              }, 1000)
+            }, 1000)
+          
+        },
+        ChangePassword(){
+                  this.$v.$touch();
+                  if( this.$v.$pendding || this.$v.$error ) return this.sendError2 = 'error' ,
+                  this.sendError1 = '',
+                  this.notFoundEmail = '',
+                  this.success = '',
+                  this.error = '';
+                  this.change_password = null
+                  this.change_sending = "sending"
+                  setTimeout(() => {
+                      this.change_sending = "sending."
+                      setTimeout(() => {
+                          this.change_sending = "sending.."
+                          setTimeout(() => {
+                              this.change_sending = "sending..."
+                              this.$apollo.mutate({
+                              mutation: SET_NEW_PASSWORD_MUTATION,
+                              variables: {
+                                email: this.emailSend,
+                                password: this.Newpassword
+                              }
+                            })
+                            .then((response) => {
+                                const data = response.data.setNewPassword
+                                console.log(data)
+                                if(data.status == 'Success'){
+                                  this.success = data.message
+                                  this.sendError1 = ''
+                                  this.sendError2 = ''
+                                  this.notFoundEmail = ''
+                                  this.error = ''
+                                  clearInterval(this.interval)
+                                  this.sec = 301
+                                  this.sendcode = 'Send code'
+                                  this.sending = 'hide'
+                                  this.code = ''
+                                  this.$v.$reset();
+                                  this.reset_data()
+                                }
+                                else{ 
+                                  this.error = data.message 
+                                  this.sendError1 = ''
+                                  this.sendError2 = ''
+                                  this.notFoundEmail = ''
+                                  this.success = ''
+                                }
+                            })
+                            .catch((err) => {
+                              console.log(err)
+                            })
+                          }, 300)
+                      }, 300)
+                  }, 300)
+        },
+        check_and_change(){
+            if(this.change_password == "check passcode"){
+                this.CheckPassCode()
             }
-            else{ 
-              this.error = data.message 
-              this.sendError1 = ''
-              this.sendError2 = ''
-              this.notFoundEmail = ''
-              this.success = ''
+            else if(this.change_password == "change password"){
+                this.ChangePassword()
             }
-          }).catch((err) => {
-            console.log(err)
-          })
-      }
+        },
     },
 }
 </script>
