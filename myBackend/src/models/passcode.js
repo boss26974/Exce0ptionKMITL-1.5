@@ -16,7 +16,7 @@ const PasscodeSchema = new Schema({
     createdAt: {
         type: Date,
         default: Date.now,
-        expires: '15m'
+        expires: '5m'
     }
 })
 
