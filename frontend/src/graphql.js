@@ -69,7 +69,7 @@ export const REPORTS_FROM_TYPE_QUERY = gql`
 
 export const FORUMS_QUERY = gql`
   query Forums($limit: Int, $filter: FilterFindManyForumInput) {
-    Forums(limit: $limit,filter: $filter, sort: _ID_DESC) {
+    Forums(limit: $limit, filter: $filter, sort: _ID_DESC) {
       _id
       topic
       type
@@ -126,33 +126,49 @@ export const DELETE_USER = gql`
 `;
 
 export const EDIT_USER = gql`
-    mutation updateUser ($id : MongoID!, $data: UpdateByIdUserInput!) {
-        updateUser (_id: $id, record: $data) {
-            recordId
-        }
+  mutation updateUser($id: MongoID!, $data: UpdateByIdUserInput!) {
+    updateUser(_id: $id, record: $data) {
+      recordId
     }
+  }
 `;
 
 export const EDIT_FORUM = gql`
-    mutation updateForum ($id : MongoID!, $data: UpdateByIdForumInput!) {
-        updateForum (_id: $id, record: $data) {
-            recordId
-        }
+  mutation updateForum($id: MongoID!, $data: UpdateByIdForumInput!) {
+    updateForum(_id: $id, record: $data) {
+      recordId
     }
-`
+  }
+`;
 
 export const EDIT_REPORTS_MUTATION = gql`
-    mutation updateReport ($id : MongoID!, $record : UpdateByIdReportInput!) {
-        updateReport (_id: $id, record: $record){
-          recordId
-        }
+  mutation updateReport($id: MongoID!, $record: UpdateByIdReportInput!) {
+    updateReport(_id: $id, record: $record) {
+      recordId
     }
-`
+  }
+`;
 
 export const REMOVE_REPORTS_MUTATION = gql`
-mutation removeReport ($id : MongoID!) {
-  removeReport (_id: $id){
-    recordId
+  mutation removeReport($id: MongoID!) {
+    removeReport(_id: $id) {
+      recordId
+    }
   }
-}
+`;
+
+export const CREATE_FORUM = gql`
+  mutation createForum($data: CreateOneForumInput!) {
+    createForum(record: $data) {
+      recordId
+    }
+  }
+`;
+
+export const DELETE_FORUM = gql`
+  mutation removeForum($id: MongoID!) {
+      removeForum(_id: $id) {
+          recordId
+      }
+  }
 `

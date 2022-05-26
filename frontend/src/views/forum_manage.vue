@@ -58,7 +58,7 @@
               </tr>
             </thead>
             <tbody>
-              <tr v-for="(forum, index) in Forums" :key="forum._id">
+              <tr v-for="(forum, index) in Forums" :key="forum._id" v-show="typeselect == forum.type || typeselect == 'all'">
                 <td id="table_body">{{ index + 1 }}</td>
                 <td colspan="2" id="table_body">{{ forum.topic }}</td>
                 <td id="table_body">
@@ -84,7 +84,7 @@
                   <button
                     id="btn"
                     class="btn btn-danger"
-                    @click="deleteopen(forum._id)"
+                    @click="deleteopen(forum)"
                     data-toggle="modal"
                     data-target="#deleteforum"
                   >
@@ -97,6 +97,18 @@
         </div>
         <div class="col-3" id="forum_type">
           <p id="forum_manage_type_title">เลือกประเภทของ forum</p>
+          <div class="form-check">
+            <input
+              class="form-check-input"
+              type="radio"
+              v-model="typeselect"
+              id="education_checkbox"
+              value="all"
+            />
+            <label class="form-check-label" for="education_checkbox"
+              >เลือกทั้งหมด</label
+            >
+          </div>
           <div class="form-check">
             <input
               class="form-check-input"
@@ -245,55 +257,55 @@
           <div class="form-group">
             <p>ประเภท</p>
             <button
-              @click="forum_type = 'การศึกษา'"
+              @click="forum_type = 'studying'"
               class="btn"
               :class="{
-                'btn-primary': forum_type == 'การศึกษา',
-                'btn-secondary': forum_type != 'การศึกษา',
+                'btn-primary': forum_type == 'studying',
+                'btn-secondary': forum_type != 'studying',
               }"
               id="type_button"
             >
               การศึกษา
             </button>
             <button
-              @click="forum_type = 'งานพาร์ทไทน์'"
+              @click="forum_type = 'sociality'"
               class="btn"
               :class="{
-                'btn-primary': forum_type == 'งานพาร์ทไทน์',
-                'btn-secondary': forum_type != 'งานพาร์ทไทน์',
+                'btn-primary': forum_type == 'sociality',
+                'btn-secondary': forum_type != 'sociality',
               }"
               id="type_button"
             >
-              งานพาร์ทไทน์
+              สภาพสังคม
             </button>
             <button
-              @click="forum_type = 'สภาพแวดล้อม'"
+              @click="forum_type = 'environment'"
               class="btn"
               :class="{
-                'btn-primary': forum_type == 'สภาพแวดล้อม',
-                'btn-secondary': forum_type != 'สภาพแวดล้อม',
+                'btn-primary': forum_type == 'environment',
+                'btn-secondary': forum_type != 'environment',
               }"
               id="type_button"
             >
               สภาพแวดล้อม
             </button>
             <button
-              @click="forum_type = 'การลงทะเบียน'"
+              @click="forum_type = 'register_system'"
               class="btn"
               :class="{
-                'btn-primary': forum_type == 'การลงทะเบียน',
-                'btn-secondary': forum_type != 'การลงทะเบียน',
+                'btn-primary': forum_type == 'register_system',
+                'btn-secondary': forum_type != 'register_system',
               }"
               id="type_button"
             >
               การลงทะเบียน
             </button>
             <button
-              @click="forum_type = 'ทุนการศึกษา'"
+              @click="forum_type = 'scholarship'"
               class="btn"
               :class="{
-                'btn-primary': forum_type == 'ทุนการศึกษา',
-                'btn-secondary': forum_type != 'ทุนการศึกษา',
+                'btn-primary': forum_type == 'scholarship',
+                'btn-secondary': forum_type != 'scholarship',
               }"
               id="type_button"
             >
@@ -580,10 +592,15 @@
 </template>
 
 <script type="text/javascript">
-import axios from "axios";
 import { required, url, minLength, maxLength } from "vuelidate/lib/validators";
 import Cookies from "js-cookie";
-import { CURRENT_ADMIN_QUERY, EDIT_FORUM, FORUMS_QUERY } from "../graphql";
+import {
+  CURRENT_ADMIN_QUERY,
+  DELETE_FORUM,
+  EDIT_FORUM,
+  FORUMS_QUERY,
+  CREATE_FORUM,
+} from "../graphql";
 
 export default {
   data() {
@@ -597,7 +614,7 @@ export default {
       forum_description: "",
       forum_type: "",
       image_address: "",
-      typeselect: null,
+      typeselect: "all",
     };
   },
   apollo: {
@@ -652,8 +669,8 @@ export default {
   methods: {
     logout() {
       console.log("Log out!");
-      Cookies.remove("tokenUser")
-      Cookies.remove("tokenAdmin")
+      Cookies.remove("tokenUser");
+      Cookies.remove("tokenAdmin");
       this.$router.push({ name: "Home" });
     },
     gotopicture: function(url, topic) {
@@ -696,33 +713,28 @@ export default {
       this.valiaftersubmit();
 
       if (!this.$v.$invalid) {
-        let newdata = {
-          forum_topic: this.forum_topic,
-          forum_description: this.forum_description,
-          forum_type: this.forum_type,
-          acc_id: this.acc_id,
-          image_address: this.image_address,
-        };
-        axios
-          .post("http://localhost:5000/forum/createforum", newdata)
-          .then((response) => {
-            this.forum_id = response.data;
-            this.allforum.push({
-              forum_id: this.forum_id,
-              forum_topic: this.forum_topic,
-              forum_description: this.forum_description,
-              forum_type: this.forum_type,
-              image_address: this.image_address,
-            });
-            this.$swal({
-              title: "เพิ่มข่าวประชาสัมพันธ์สำเร็จ",
-              icon: "success",
-            });
+        this.$apollo
+          .mutate({
+            mutation: CREATE_FORUM,
+            variables: {
+              data: {
+                topic: this.forum_topic,
+                type: this.forum_type,
+                description: this.forum_description,
+                image_path: this.image_address,
+                author_id: this.currentAdmin._id,
+              },
+            },
           })
-          .catch((err) => {
-            alert(err);
+          .then(() => {
+            this.$apollo.queries.Forums.refetch().then(() => {
+              this.$swal({
+                title: "เพิ่มข่าวประชาสัมพันธ์สำเร็จ",
+                icon: "success",
+              });
+              this.close_modal_button;
+            });
           });
-        this.close_modal_button;
       }
     },
     editopen: function(forum) {
@@ -760,30 +772,27 @@ export default {
           });
       }
     },
-    deleteopen: function(id) {
-      let forum_delete = this.allforum.filter((x) => {
-        return x.forum_id == id;
-      });
-      this.forum_topic = forum_delete[0].forum_topic;
-      this.forum_id = id;
+    deleteopen: function(forum) {
+      this.forum_topic = forum.topic;
+      this.forum_id = forum._id;
     },
     realdelete: function() {
-      axios
-        .delete("http://localhost:5000/forum/" + this.forum_id)
-        .then(() => {
-          let forum = this.allforum.filter((x) => {
-            return x.forum_id != this.forum_id;
-          });
-          this.allforum = forum;
+      this.$apollo
+        .mutate({
+          mutation: DELETE_FORUM,
+          variables: {
+            id: this.forum_id,
+          },
         })
-        .catch((err) => {
-          alert(err);
+        .then(() => {
+          this.$apollo.queries.Forums.refetch().then(() => {
+            this.$swal({
+              title: "ลบข่าวประชาสัมพันธ์สำเร็จ",
+              icon: "success",
+            });
+            this.close_modal_button;
+          });
         });
-      this.$swal({
-        title: "ลบข่าวประชาสัมพันธ์สำเร็จ",
-        icon: "success",
-      });
-      this.close_modal_button;
     },
     close_modal_button() {
       this.forum_topic = "";
@@ -793,10 +802,22 @@ export default {
     },
   },
   watch: {
-    typeselect(){
-      this.$apollo.queries.Forums.refetch({filter: {type: this.typeselect}}).then(() => {
-            console.log(this.typeselect)
-            });
+    typeselect() {
+    //   if (this.typeselect != "all") {
+    //     this.$apollo.queries.Forums.refetch({
+    //       filter: { type: this.typeselect },
+    //     }).then(() => {
+    //       console.log(this.typeselect);
+    //     });
+    //   } else {
+    //     this.$apollo.queries.Forums.refetch().then((res) => {
+    //         console.log(res)
+    //       this.$swal({
+    //         title: "เพิ่มข่าวประชาสัมพันธ์สำเร็จ",
+    //         icon: "success",
+    //       });
+    //     });
+    //   }
     },
   },
 };
