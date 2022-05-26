@@ -59,6 +59,8 @@ export const REPORTS_FROM_TYPE_QUERY = gql`
       topic
       type
       description
+      target
+      condition_of_submission
       submission_status
       createdAt
     }
@@ -137,4 +139,20 @@ export const EDIT_FORUM = gql`
             recordId
         }
     }
+`
+
+export const EDIT_REPORTS_MUTATION = gql`
+    mutation updateReport ($id : MongoID!, $record : UpdateByIdReportInput!) {
+        updateReport (_id: $id, record: $record){
+          recordId
+        }
+    }
+`
+
+export const REMOVE_REPORTS_MUTATION = gql`
+mutation removeReport ($id : MongoID!) {
+  removeReport (_id: $id){
+    recordId
+  }
+}
 `

@@ -54,10 +54,10 @@
         <div id="all_select_tab" class="container-fluid">
             <section v-if="Reports.length != 0"><div class="row" v-for="reportform in Reports" :key="reportform._id" style="margin-bottom: 7%;">
                 <div class="col-5" id="reportform_description">
-                    <p>หัวข้อเรื่องร้องเรียน : {{reportform.topic}}</p>
-                    <p>เนื้อหาเรื่องร้องเรียน : {{reportform.description}}</p>
-                    <p>สถานะ : {{thaiStatus(reportform.submission_status)}}</p>
-                    <p>ประเภทเรื่องร้องเรียน : {{thaiType(reportform.type)}}</p>
+                    <p><span id="text-head">หัวข้อเรื่องร้องเรียน :</span> {{reportform.topic}}</p>
+                    <p><span id="text-head">เนื้อหาเรื่องร้องเรียน :</span> {{reportform.description}}</p>
+                    <p><span id="text-head">สถานะ :</span> {{thaiStatus(reportform.submission_status)}}</p>
+                    <p><span id="text-head">ประเภทเรื่องร้องเรียน :</span> {{thaiType(reportform.type)}}</p>
                 </div>
                 <div class="col-7" id="reportform_bar">
                     <div class="row">
@@ -207,11 +207,11 @@ export default {
                    width = "0%";
                }
                else if(status == "In_Progress"){
-                   backgroundcolor = "#777777"
+                   backgroundcolor = "#FFCC00"
                    width = "37.5%";
                }
                else if(status == "Accepted"){
-                   backgroundcolor = "#FFCC00"
+                   backgroundcolor = "#7FFFD4"
                    width = "62.5%";
                }
                else if(status == "Completed"){
@@ -531,5 +531,9 @@ export default {
     }
     .home:hover{
         color:black;
+    }
+    #text-head{
+        font-weight: 400;
+        color:rgb(200, 150, 20);
     }
 </style>
