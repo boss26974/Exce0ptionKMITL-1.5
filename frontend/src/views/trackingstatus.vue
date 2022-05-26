@@ -109,6 +109,7 @@ export default {
                 currentAdmin: null,
                 // trackingstatus
                 Reports: [],
+                backupReports: [],
                 type_select: "all",
                 onlyself_check: false,
                 title: "",
@@ -165,7 +166,17 @@ export default {
                }
                
                if(this.type_select == "all" && !this.onlyself_check){
-                   this.$apollo.queries.Reports.refetch()
+                   this.$apollo.queries.Reports.refetch({
+                        filter: {
+                            OR : [
+                                {type: "sociality"},
+                                {type: "studying"},
+                                {type: "scholarship"},
+                                {type: "register_system"},
+                                {type: "environment"}
+                            ]
+                        }
+                    })
                    .then(() => {
                        this.thaiTitle()
                    })
@@ -211,7 +222,7 @@ export default {
                    width = "37.5%";
                }
                else if(status == "Accepted"){
-                   backgroundcolor = "#7FFFD4"
+                   backgroundcolor = "#FFCC00"
                    width = "62.5%";
                }
                else if(status == "Completed"){
@@ -280,19 +291,22 @@ export default {
                 return type
             },
             thaiTitle: function(){
-                if(this.type_select == "sociality"){
+                if(this.type_select == "all"){
+                    this.title = ""
+                }
+                else if(this.type_select == "sociality"){
                     this.title = "เกี่ยวกับสภาพสังคม"
                 }
-                if(this.type_select == "studying"){
+                else if(this.type_select == "studying"){
                     this.title = "เกี่ยวกับการศึกษา"
                 }
-                if(this.type_select == "scholarship"){
+                else if(this.type_select == "scholarship"){
                     this.title = "เกี่ยวกับทุนการศึกษา"
                 }
-                if(this.type_select == "register_system"){
+                else if(this.type_select == "register_system"){
                     this.title = "เกี่ยวกับการลงทะเบียนเรียน"
                 }
-                if(this.type_select == "environment"){
+                else if(this.type_select == "environment"){
                     this.title = "เกี่ยวกับสภาพแวดล้อม"
                 }
             }
