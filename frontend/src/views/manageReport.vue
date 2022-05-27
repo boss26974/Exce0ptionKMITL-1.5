@@ -61,7 +61,7 @@
                             <tbody>
                                 <tr v-for='(report, index) in allReport(Reports)' :key="report._id" :class="{'table-primary': report.submission_status == 'Received', 'table-warning': report.submission_status == 'In_Progress', 'table-info': report.submission_status == 'Accepted', 'table-success': report.submission_status == 'Completed', 'table-danger': report.submission_status == 'Declined'}">
                                     <td style="height: 70px; padding: 20px 0px 20px 30px;" scope="col" class="col-md-1">{{index + 1}}</td>
-                                    <td style="height: 70px; padding: 10px 0px 20px 10px;" scope="col" class="col-md-3">{{report.createdAt}}</td>
+                                    <td style="height: 70px; padding: 10px 0px 20px 10px;" scope="col" class="col-md-3">{{changeDate(report.createdAt)}}</td>
                                     <td style="height: 70px; padding: 10px 0px 20px 10px;" scope="col" class="col-md-3">{{report.type}}</td>
                                     <td style="height: 70px; padding: 10px 0px 20px 10px;" scope="col" class="col-md-4" v-html="report.topic"></td>
                                     <td style="height: 70px; padding: 20px 0px 20px 10px;" scope="col" id="td_action" class="col-md-1">
