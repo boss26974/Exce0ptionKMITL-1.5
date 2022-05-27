@@ -176,7 +176,7 @@
             data-target=".create-modal-xl"
             @click="close_modal_button"
           >
-            Create
+            Create Forum
           </button>
         </div>
       </div>
