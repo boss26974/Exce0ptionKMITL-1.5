@@ -4,17 +4,33 @@ import { ApolloServerPluginDrainHttpServer, ApolloServerPluginLandingPageGraphQL
 import { ApolloServer } from 'apollo-server-express'
 import cors from 'cors'
 import express from 'express'
+import session from 'express-session'
 
-import './mongoose-connect' //connect ก่อน import schema
+import './mongoose-connect'
 import schema from './graphql'
 import jsonwebtoken from 'jsonwebtoken'
 import cookieParser from 'cookie-parser'
 
 const app = express()
+
+//for deploy on heroku
+app.set("trust proxy", 1)
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || 'ExceptionKMITL@12345',
+    resave: true,
+    saveUninitialized: false,
+    cookie: {
+      sameSite: process.env.NODE_ENV === "production" ? 'none' : 'lax', // must be 'none' to enable cross-site delivery
+      secure: process.env.NODE_ENV === "production", // must be true if sameSite='none'
+    }
+  })
+);
+
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 app.use(cors({
-  origin: 'http://localhost:8080', //น่าจะต้องแก้ถ้าจะ deploy
+  origin: process.env.FRONTEND_APP_URL,
   credentials: true
 }))
 app.use(cookieParser())
@@ -58,7 +74,7 @@ const startApolloServer = async () => {
   })
   await apolloServer.start()
   apolloServer.applyMiddleware({ app, path: '/graphql', cors: {origin: ['*']} })
-  httpServer.listen({ port: 3001 })
+  httpServer.listen({ port: process.env.PORT })
 
   console.log("Server running at Port 3001")
 }
