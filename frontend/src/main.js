@@ -15,17 +15,39 @@ import { ApolloClient } from 'apollo-client'
 import { HttpLink } from 'apollo-link-http'
 import { InMemoryCache } from 'apollo-cache-inmemory'
 import VueApollo from 'vue-apollo'
+import Cookies from 'js-cookie'
+import { ApolloLink, concat } from 'apollo-link'
 
-const httpLink = new HttpLink({
-  // URL to graphql server, you should use an absolute URL here
-  uri: 'http://localhost:3001/graphql',
-  credentials: "include"
-})
+// Cookies.withAttributes({sameSite: "none", secure: true})
 
-const apolloClient = new ApolloClient({
-  link: httpLink,
+// const httpLink = new HttpLink({
+//   // URL to graphql server, you should use an absolute URL here
+//   uri: 'https://exception-kmitl-backend.herokuapp.com/graphql',
+//   credentials: "include"
+// })
+
+// const apolloClient = new ApolloClient({
+//   link: httpLink,
+//   cache: new InMemoryCache(),
+// })
+
+const httpLink = new HttpLink({ uri: "https://exception-kmitl-backend.herokuapp.com/graphql" });
+
+const authMiddleware = new ApolloLink((operation, forward) => {
+  // add the authorization to the headers
+const tokenUser = Cookies.get('tokenUser');
+const tokenAdmin = Cookies.get('tokenAdmin')
+  operation.setContext({
+    headers: {
+      authorization: tokenUser ? `Bearer ${tokenUser}` : tokenAdmin ? `Bearer ${tokenAdmin}` : "",
+    },
+  });
+  return forward(operation);
+});
+export const apolloClient = new ApolloClient({
+  link: concat(authMiddleware, httpLink),
   cache: new InMemoryCache(),
-})
+});
 
 Vue.config.productionTip = false
 Vue.use(VueSweetalert2)
