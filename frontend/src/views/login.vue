@@ -151,7 +151,7 @@
                   style="background-color: #130d0d; border-color: white"
                   v-model="remember"
                 />
-                <label class="form-check-label" for="Check1">Remember me</label>
+                <label class="form-check-label" for="Check1" style="color : #ffffff">Remember me</label>
                 <a
                   href="/forgotpassword"
                   style="

@@ -40,6 +40,21 @@
         <div class="col-md-8" id="registerRight">
           <div class="p-6 ml-6 mr-6" style="background-color: #130d0d">
             <p v-html="br" />
+              <div
+                class="alert alert-danger alert-dismissible fade show"
+                role="alert"
+                v-show="messageRegError != ''"
+              >
+                {{ messageRegError }}
+                <button
+                  type="button"
+                  class="close"
+                  data-dismiss="alert"
+                  aria-label="Close"
+                >
+                  <span aria-hidden="true">&times;</span>
+                </button>
+              </div>
             <p style="font-size: 35px; font-weight: 500; color: white">
               Welcome to <span style="color: red">ExceptionKMITL!</span>
             </p>
@@ -285,7 +300,7 @@
                     'is-valid': !$v.Iagree.$invalid,
                   }"
                 />
-                <label class="form-check-label" for="Check2"
+                <label class="form-check-label" for="Check2" style="color : #ffffff"
                   >I agree with terms and conditions</label
                 >
                 <!-- <span>{{Iagree}}</span> -->
@@ -293,7 +308,7 @@
                   <span v-if="!$v.Iagree.required"
                     >กรุณาคลิกเพื่อยอมรับเงื่อนไขและข้อตกลง</span
                   >
-                  <span v-else-if="!$v.Iagree == false"
+                  <span v-else-if="!$v.Iagree == false" 
                     >กรุณาคลิกเพื่อยอมรับเงื่อนไขและข้อตกลง</span
                   >
                 </div>
@@ -398,6 +413,7 @@ export default {
       // backend response
       dataReg: "",
       messageRegOK: "",
+      messageRegError: ""
       // backend error
     };
   },
@@ -499,6 +515,7 @@ export default {
         .then((res) => {
           const data = res.data.createUser;
           if (data.recordId) {
+            this.messageRegError = ""
             this.messageRegOK = "register success Let's Login!";
             console.log(res);
             this.$v.$reset();
@@ -506,7 +523,7 @@ export default {
           }
         })
         .catch((err) => {
-          alert("test");
+          this.messageRegError = "Email or Student ID is already Used"
           console.log(err)
         });
       }

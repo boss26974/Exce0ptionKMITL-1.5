@@ -19,7 +19,7 @@
       </div>
     </div>
         <div class="wrapper fadeInDown">
-            <div id="formContent" style="margin-top:80px; margin-bottom:80px;">
+            <div id="formContent" style="margin-top:80px; margin-bottom:150px;">
                 <div class="fadeIn first">
                     <img src="/image/navbar/newlogo.png" id="icon" alt="" />
                 </div>
