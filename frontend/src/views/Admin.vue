@@ -207,7 +207,10 @@ export default {
             query: CURRENT_ADMIN_QUERY
         },
         Forums: {
-            query: FORUMS_QUERY
+            query: FORUMS_QUERY,
+            variables: {
+                limit: 8
+            }
         }
     },
     validations:{
